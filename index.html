@@ -1,0 +1,4201 @@
+﻿<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="theme-color" content="#ff6b9d">
+    <title>LoveNest · 恋爱小窝</title>
+    <style>
+/* ===== LoveNest 恋爱小窝 - 全局样式 ===== */
+
+/* CSS 变量 */
+:root {
+    --primary: #ff6b9d;
+    --primary-dark: #e91e63;
+    --primary-light: #ffc1d8;
+    --primary-gradient: linear-gradient(135deg, #ff6b9d, #ff8e53);
+    --primary-gradient-soft: linear-gradient(135deg, #ffecd2, #fcb69f);
+    --bg-main: #fff5f7;
+    --bg-card: #ffffff;
+    --text-main: #2d1b36;
+    --text-secondary: #8a7a8e;
+    --text-light: #c4b4c8;
+    --border: #f0e0e5;
+    --success: #4ecdc4;
+    --warning: #ffd93d;
+    --danger: #ff6b6b;
+    --shadow-sm: 0 2px 8px rgba(255, 107, 157, 0.08);
+    --shadow-md: 0 4px 20px rgba(255, 107, 157, 0.12);
+    --shadow-lg: 0 8px 30px rgba(255, 107, 157, 0.18);
+    --radius-sm: 8px;
+    --radius-md: 16px;
+    --radius-lg: 24px;
+    --header-h: 64px;
+    --nav-h: 60px;
+    --safe-bottom: env(safe-area-inset-bottom, 0px);
+}
+
+/* Reset */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    -webkit-tap-highlight-color: transparent;
+    -webkit-touch-callout: none;
+}
+
+html, body {
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+    font-family: 'Noto Sans SC', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    font-size: 14px;
+    color: var(--text-main);
+    background: var(--bg-main);
+}
+
+#app {
+    width: 100%;
+    height: 100%;
+    position: relative;
+    overflow: hidden;
+}
+
+/* ===== 启动动画 ===== */
+.splash-screen {
+    position: fixed;
+    inset: 0;
+    z-index: 9999;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    background: var(--primary-gradient);
+    transition: opacity 0.6s ease, visibility 0.6s ease;
+}
+
+.splash-screen.hidden {
+    opacity: 0;
+    visibility: hidden;
+}
+
+.splash-heart {
+    font-size: 64px;
+    animation: heartbeat 1.2s ease-in-out infinite;
+}
+
+.splash-title {
+    margin-top: 16px;
+    font-size: 32px;
+    font-weight: 700;
+    color: #fff;
+    letter-spacing: 2px;
+}
+
+.splash-subtitle {
+    margin-top: 4px;
+    font-size: 16px;
+    color: rgba(255,255,255,0.8);
+}
+
+@keyframes heartbeat {
+    0%, 100% { transform: scale(1); }
+    25% { transform: scale(1.15); }
+    50% { transform: scale(1); }
+    75% { transform: scale(1.1); }
+}
+
+/* ===== 页面系统 ===== */
+.page {
+    display: none;
+    width: 100%;
+    height: 100%;
+    position: absolute;
+    top: 0;
+    left: 0;
+}
+
+.page.active {
+    display: flex;
+    flex-direction: column;
+    animation: pageIn 0.3s ease;
+}
+
+@keyframes pageIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+/* ===== 认证页面 ===== */
+.auth-bg {
+    position: absolute;
+    inset: 0;
+    background: var(--primary-gradient);
+    overflow: hidden;
+}
+
+.admin-bg {
+    background: linear-gradient(135deg, #1a1a2e, #16213e, #0f3460);
+}
+
+.floating-hearts {
+    position: absolute;
+    inset: 0;
+}
+
+.floating-hearts span {
+    position: absolute;
+    font-size: 24px;
+    opacity: 0.3;
+    animation: floatUp 6s ease-in-out infinite;
+}
+
+.floating-hearts span:nth-child(1) { left: 10%; animation-delay: 0s; }
+.floating-hearts span:nth-child(2) { left: 30%; animation-delay: 1s; }
+.floating-hearts span:nth-child(3) { left: 50%; animation-delay: 2s; }
+.floating-hearts span:nth-child(4) { left: 70%; animation-delay: 3s; }
+.floating-hearts span:nth-child(5) { left: 85%; animation-delay: 4s; }
+
+@keyframes floatUp {
+    0% { bottom: -40px; transform: translateX(0) rotate(0); opacity: 0; }
+    20% { opacity: 0.4; }
+    80% { opacity: 0.3; }
+    100% { bottom: 110%; transform: translateX(20px) rotate(20deg); opacity: 0; }
+}
+
+.auth-card {
+    position: relative;
+    z-index: 1;
+    margin: auto;
+    width: 90%;
+    max-width: 380px;
+    background: rgba(255, 255, 255, 0.95);
+    backdrop-filter: blur(20px);
+    border-radius: var(--radius-lg);
+    padding: 32px 24px;
+    box-shadow: var(--shadow-lg);
+    max-height: 90vh;
+    overflow-y: auto;
+}
+
+.admin-card {
+    background: rgba(30, 30, 50, 0.95);
+    color: #fff;
+}
+
+.auth-logo {
+    text-align: center;
+    margin-bottom: 24px;
+}
+
+.logo-icon {
+    font-size: 48px;
+    margin-bottom: 8px;
+}
+
+.auth-logo h1 {
+    font-size: 28px;
+    font-weight: 700;
+    color: var(--primary-dark);
+}
+
+.admin-card .auth-logo h1 {
+    color: #fff;
+}
+
+.auth-logo p {
+    font-size: 13px;
+    color: var(--text-secondary);
+    margin-top: 4px;
+}
+
+.admin-card .auth-logo p {
+    color: rgba(255,255,255,0.6);
+}
+
+.auth-form {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+}
+
+.input-group {
+    display: flex;
+    align-items: center;
+    background: #f8f4f6;
+    border: 2px solid transparent;
+    border-radius: var(--radius-sm);
+    padding: 0 12px;
+    height: 48px;
+    transition: all 0.3s;
+}
+
+.input-group:focus-within {
+    border-color: var(--primary);
+    background: #fff;
+    box-shadow: 0 0 0 3px rgba(255, 107, 157, 0.1);
+}
+
+.admin-card .input-group {
+    background: rgba(255,255,255,0.1);
+}
+
+.admin-card .input-group:focus-within {
+    background: rgba(255,255,255,0.15);
+    border-color: #4a90d9;
+}
+
+.input-icon {
+    font-size: 18px;
+    margin-right: 8px;
+    flex-shrink: 0;
+}
+
+.input-group input {
+    flex: 1;
+    border: none;
+    background: transparent;
+    font-size: 15px;
+    outline: none;
+    color: var(--text-main);
+    height: 100%;
+}
+
+.admin-card .input-group input {
+    color: #fff;
+}
+
+.admin-card .input-group input::placeholder {
+    color: rgba(255,255,255,0.4);
+}
+
+.sms-group input {
+    flex: 1;
+}
+
+.btn-sms {
+    background: var(--primary-light);
+    color: var(--primary-dark);
+    border: none;
+    border-radius: 6px;
+    padding: 6px 12px;
+    font-size: 12px;
+    white-space: nowrap;
+    cursor: pointer;
+    transition: all 0.3s;
+}
+
+.btn-sms:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.gender-select {
+    display: flex;
+    gap: 12px;
+}
+
+.gender-option {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 44px;
+    background: #f8f4f6;
+    border: 2px solid transparent;
+    border-radius: var(--radius-sm);
+    cursor: pointer;
+    font-size: 14px;
+    transition: all 0.3s;
+}
+
+.gender-option input {
+    display: none;
+}
+
+.gender-option:has(input:checked) {
+    background: var(--primary-light);
+    border-color: var(--primary);
+    color: var(--primary-dark);
+    font-weight: 500;
+}
+
+.checkbox-label {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 13px;
+    color: var(--text-secondary);
+}
+
+.checkbox-label input {
+    width: 16px;
+    height: 16px;
+    accent-color: var(--primary);
+}
+
+.checkbox-label a {
+    color: var(--primary);
+}
+
+.btn-primary {
+    height: 48px;
+    background: var(--primary-gradient);
+    color: #fff;
+    border: none;
+    border-radius: var(--radius-sm);
+    font-size: 16px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.3s;
+    box-shadow: 0 4px 12px rgba(255, 107, 157, 0.3);
+}
+
+.btn-primary:active {
+    transform: scale(0.97);
+}
+
+.btn-admin {
+    background: linear-gradient(135deg, #4a90d9, #357abd);
+    box-shadow: 0 4px 12px rgba(74, 144, 217, 0.3);
+}
+
+.auth-switch {
+    text-align: center;
+    font-size: 13px;
+    color: var(--text-secondary);
+}
+
+.auth-switch a {
+    color: var(--primary);
+    text-decoration: none;
+    font-weight: 500;
+}
+
+/* ===== 主应用布局 ===== */
+#mainApp {
+    background: var(--bg-main);
+}
+
+.app-header {
+    height: var(--header-h);
+    background: var(--primary-gradient);
+    display: flex;
+    align-items: center;
+    padding: 0 16px;
+    flex-shrink: 0;
+    position: relative;
+    z-index: 10;
+}
+
+.couple-avatars {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.avatar {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 20px;
+    background: rgba(255,255,255,0.3);
+    border: 2px solid rgba(255,255,255,0.5);
+}
+
+.heart-beat {
+    font-size: 14px;
+    animation: heartbeat 1.5s ease-in-out infinite;
+}
+
+.header-center {
+    flex: 1;
+    text-align: center;
+    color: #fff;
+}
+
+.couple-names {
+    font-size: 14px;
+    font-weight: 500;
+}
+
+.love-days {
+    font-size: 12px;
+    opacity: 0.85;
+}
+
+.icon-btn {
+    background: rgba(255,255,255,0.2);
+    border: none;
+    border-radius: 50%;
+    width: 36px;
+    height: 36px;
+    font-size: 16px;
+    cursor: pointer;
+    position: relative;
+    color: #fff;
+}
+
+.badge {
+    position: absolute;
+    top: -4px;
+    right: -4px;
+    background: #ff4444;
+    color: #fff;
+    font-size: 10px;
+    min-width: 16px;
+    height: 16px;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0 4px;
+}
+
+.app-content {
+    flex: 1;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+    padding-bottom: calc(var(--nav-h) + var(--safe-bottom) + 12px);
+}
+
+/* ===== Tab切换 ===== */
+.tab-section {
+    display: none;
+    padding: 16px;
+}
+
+.tab-section.active {
+    display: block;
+    animation: tabIn 0.3s ease;
+}
+
+@keyframes tabIn {
+    from { opacity: 0; transform: translateX(10px); }
+    to { opacity: 1; transform: translateX(0); }
+}
+
+/* ===== 甜蜜横幅 ===== */
+.love-banner {
+    position: relative;
+    border-radius: var(--radius-lg);
+    overflow: hidden;
+    padding: 24px 16px;
+    margin-bottom: 20px;
+}
+
+.banner-bg-gradient {
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(135deg, #ff6b9d, #c44fef, #ff8e53);
+    opacity: 0.9;
+}
+
+.banner-content {
+    position: relative;
+    z-index: 1;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+}
+
+.love-score-ring {
+    position: relative;
+    width: 100px;
+    height: 100px;
+    flex-shrink: 0;
+}
+
+.progress-ring {
+    width: 100px;
+    height: 100px;
+}
+
+.progress-ring circle {
+    transition: stroke-dashoffset 1s ease;
+}
+
+.score-text {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    color: #fff;
+}
+
+.score-num {
+    font-size: 28px;
+    font-weight: 700;
+    line-height: 1;
+}
+
+.score-label {
+    font-size: 10px;
+    opacity: 0.8;
+    margin-top: 2px;
+}
+
+.banner-title {
+    color: #fff;
+    font-size: 16px;
+    font-weight: 500;
+    flex: 1;
+    line-height: 1.5;
+}
+
+/* ===== 卡片区块 ===== */
+.card-section {
+    background: var(--bg-card);
+    border-radius: var(--radius-md);
+    padding: 16px;
+    margin-bottom: 16px;
+    box-shadow: var(--shadow-sm);
+}
+
+.section-title {
+    font-size: 15px;
+    font-weight: 600;
+    margin-bottom: 12px;
+    color: var(--text-main);
+}
+
+/* ===== 每日任务 ===== */
+.daily-tasks {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.task-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 12px;
+    background: #faf6f8;
+    border-radius: var(--radius-sm);
+    transition: all 0.3s;
+    cursor: pointer;
+}
+
+.task-item.done {
+    background: #e8f8f6;
+    opacity: 0.7;
+}
+
+.task-check {
+    width: 22px;
+    height: 22px;
+    border: 2px solid var(--primary);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    transition: all 0.3s;
+    font-size: 12px;
+    color: transparent;
+}
+
+.task-item.done .task-check {
+    background: var(--success);
+    border-color: var(--success);
+    color: #fff;
+}
+
+.task-text {
+    flex: 1;
+    font-size: 14px;
+}
+
+.task-item.done .task-text {
+    text-decoration: line-through;
+    color: var(--text-secondary);
+}
+
+.task-reward {
+    font-size: 12px;
+    color: var(--primary);
+    font-weight: 500;
+}
+
+/* ===== 情话卡片 ===== */
+.love-quote-card {
+    text-align: center;
+    padding: 20px 16px;
+    background: linear-gradient(135deg, #fff0f5, #f0e6ff);
+    border-radius: var(--radius-sm);
+    cursor: pointer;
+    transition: all 0.3s;
+}
+
+.love-quote-card:active {
+    transform: scale(0.98);
+}
+
+.quote-text {
+    font-size: 15px;
+    line-height: 1.6;
+    color: var(--text-main);
+    font-style: italic;
+}
+
+.quote-refresh {
+    display: block;
+    margin-top: 8px;
+    font-size: 12px;
+    color: var(--text-secondary);
+}
+
+/* ===== 快捷操作 ===== */
+.quick-actions {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 10px;
+    margin-top: 16px;
+}
+
+.quick-btn {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+    padding: 14px 8px;
+    background: var(--bg-card);
+    border: none;
+    border-radius: var(--radius-md);
+    cursor: pointer;
+    transition: all 0.3s;
+    box-shadow: var(--shadow-sm);
+}
+
+.quick-btn:active {
+    transform: scale(0.95);
+}
+
+.quick-icon {
+    font-size: 28px;
+}
+
+.quick-btn span:last-child {
+    font-size: 12px;
+    color: var(--text-secondary);
+}
+
+/* ===== Section Header ===== */
+.section-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 16px;
+}
+
+.section-header h2 {
+    font-size: 18px;
+    font-weight: 600;
+}
+
+.btn-add {
+    background: var(--primary-gradient);
+    color: #fff;
+    border: none;
+    border-radius: 20px;
+    padding: 6px 14px;
+    font-size: 13px;
+    cursor: pointer;
+    transition: all 0.3s;
+}
+
+.btn-add:active {
+    transform: scale(0.95);
+}
+
+/* ===== 日记时间线 ===== */
+.diary-timeline {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.diary-card {
+    background: var(--bg-card);
+    border-radius: var(--radius-md);
+    padding: 16px;
+    box-shadow: var(--shadow-sm);
+    border-left: 4px solid var(--primary);
+}
+
+.diary-date {
+    font-size: 12px;
+    color: var(--text-secondary);
+    margin-bottom: 6px;
+}
+
+.diary-title {
+    font-size: 15px;
+    font-weight: 600;
+    margin-bottom: 6px;
+}
+
+.diary-content {
+    font-size: 14px;
+    line-height: 1.6;
+    color: var(--text-secondary);
+    max-height: 80px;
+    overflow: hidden;
+    transition: max-height 0.3s;
+}
+
+.diary-card.expanded .diary-content {
+    max-height: 500px;
+}
+
+.diary-footer {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-top: 8px;
+}
+
+.diary-author {
+    font-size: 12px;
+    color: var(--primary);
+    font-weight: 500;
+}
+
+.diary-mood {
+    font-size: 12px;
+}
+
+.empty-state {
+    text-align: center;
+    padding: 48px 20px;
+    color: var(--text-secondary);
+}
+
+.empty-state .empty-icon {
+    font-size: 48px;
+    margin-bottom: 12px;
+    opacity: 0.5;
+}
+
+.empty-state .empty-text {
+    font-size: 14px;
+}
+
+/* ===== 愿望清单 ===== */
+.wish-stats {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 16px;
+}
+
+.wish-stat {
+    flex: 1;
+    text-align: center;
+    background: var(--bg-card);
+    border-radius: var(--radius-sm);
+    padding: 12px 8px;
+    box-shadow: var(--shadow-sm);
+}
+
+.stat-num {
+    display: block;
+    font-size: 22px;
+    font-weight: 700;
+    color: var(--primary);
+}
+
+.stat-label {
+    font-size: 11px;
+    color: var(--text-secondary);
+}
+
+.wish-list {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.wish-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    background: var(--bg-card);
+    border-radius: var(--radius-md);
+    padding: 14px 16px;
+    box-shadow: var(--shadow-sm);
+    transition: all 0.3s;
+}
+
+.wish-check {
+    width: 24px;
+    height: 24px;
+    border: 2px solid var(--primary);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    cursor: pointer;
+    transition: all 0.3s;
+    font-size: 12px;
+    color: transparent;
+}
+
+.wish-item.done .wish-check {
+    background: var(--success);
+    border-color: var(--success);
+    color: #fff;
+}
+
+.wish-content {
+    flex: 1;
+}
+
+.wish-text {
+    font-size: 14px;
+    font-weight: 500;
+}
+
+.wish-item.done .wish-text {
+    text-decoration: line-through;
+    opacity: 0.6;
+}
+
+.wish-meta {
+    font-size: 12px;
+    color: var(--text-secondary);
+    margin-top: 2px;
+}
+
+.wish-delete {
+    font-size: 18px;
+    color: var(--text-light);
+    cursor: pointer;
+    padding: 4px;
+}
+
+/* ===== 纪念日 ===== */
+.countdown-banner {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    background: linear-gradient(135deg, #ff6b9d, #ff8e53);
+    border-radius: var(--radius-md);
+    padding: 20px 16px;
+    margin-bottom: 16px;
+    color: #fff;
+}
+
+.countdown-icon {
+    font-size: 36px;
+}
+
+.countdown-info {
+    display: flex;
+    flex-direction: column;
+}
+
+.countdown-label {
+    font-size: 12px;
+    opacity: 0.85;
+}
+
+.countdown-days {
+    font-size: 28px;
+    font-weight: 700;
+}
+
+.countdown-name {
+    font-size: 14px;
+    opacity: 0.9;
+}
+
+.anniversary-list {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.anniv-card {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    background: var(--bg-card);
+    border-radius: var(--radius-md);
+    padding: 14px 16px;
+    box-shadow: var(--shadow-sm);
+}
+
+.anniv-icon {
+    font-size: 28px;
+    width: 48px;
+    height: 48px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--primary-light);
+    border-radius: 50%;
+    flex-shrink: 0;
+}
+
+.anniv-info {
+    flex: 1;
+}
+
+.anniv-name {
+    font-size: 15px;
+    font-weight: 600;
+}
+
+.anniv-date {
+    font-size: 12px;
+    color: var(--text-secondary);
+}
+
+.anniv-count {
+    text-align: right;
+}
+
+.anniv-count-num {
+    font-size: 18px;
+    font-weight: 700;
+    color: var(--primary);
+}
+
+.anniv-count-label {
+    font-size: 11px;
+    color: var(--text-secondary);
+}
+
+/* ===== 个人中心 ===== */
+.profile-header {
+    text-align: center;
+    padding: 32px 16px 20px;
+    background: var(--primary-gradient);
+    border-radius: var(--radius-lg);
+    margin-bottom: 16px;
+    color: #fff;
+}
+
+.profile-avatar {
+    width: 72px;
+    height: 72px;
+    margin: 0 auto 12px;
+    border-radius: 50%;
+    background: rgba(255,255,255,0.3);
+    border: 3px solid rgba(255,255,255,0.5);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 36px;
+}
+
+.profile-name {
+    font-size: 20px;
+    font-weight: 700;
+}
+
+.profile-phone {
+    font-size: 13px;
+    opacity: 0.85;
+    margin-top: 4px;
+}
+
+.profile-badge {
+    display: inline-block;
+    margin-top: 8px;
+    background: rgba(255,255,255,0.25);
+    padding: 4px 12px;
+    border-radius: 12px;
+    font-size: 12px;
+}
+
+.profile-menu {
+    background: var(--bg-card);
+    border-radius: var(--radius-md);
+    overflow: hidden;
+    box-shadow: var(--shadow-sm);
+}
+
+.menu-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 14px 16px;
+    cursor: pointer;
+    transition: background 0.2s;
+    border-bottom: 1px solid var(--border);
+}
+
+.menu-item:last-child {
+    border-bottom: none;
+}
+
+.menu-item:active {
+    background: #faf6f8;
+}
+
+.menu-icon {
+    font-size: 20px;
+    width: 28px;
+    text-align: center;
+}
+
+.menu-text {
+    flex: 1;
+    font-size: 14px;
+}
+
+.menu-arrow {
+    color: var(--text-light);
+    font-size: 20px;
+}
+
+.menu-logout .menu-text {
+    color: var(--danger);
+}
+
+/* ===== 底部导航 ===== */
+.bottom-nav {
+    height: var(--nav-h);
+    background: var(--bg-card);
+    display: flex;
+    align-items: center;
+    justify-content: space-around;
+    box-shadow: 0 -2px 12px rgba(255, 107, 157, 0.08);
+    flex-shrink: 0;
+    padding-bottom: var(--safe-bottom);
+    position: relative;
+    z-index: 10;
+}
+
+.nav-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 2px;
+    background: none;
+    border: none;
+    cursor: pointer;
+    flex: 1;
+    padding: 8px 4px;
+    transition: all 0.3s;
+    color: var(--text-secondary);
+    position: relative;
+}
+
+.nav-item.active {
+    color: var(--primary);
+}
+
+.nav-item.active .nav-icon {
+    transform: scale(1.2);
+    transition: transform 0.3s;
+}
+
+.nav-icon {
+    font-size: 22px;
+    transition: transform 0.3s;
+}
+
+.nav-label {
+    font-size: 10px;
+}
+
+.nav-center {
+    position: relative;
+}
+
+.nav-center::before {
+    content: '';
+    position: absolute;
+    top: -12px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 48px;
+    height: 48px;
+    background: var(--primary-gradient);
+    border-radius: 50%;
+    box-shadow: var(--shadow-md);
+}
+
+.nav-center .nav-icon {
+    position: relative;
+    z-index: 1;
+    color: #fff;
+    margin-top: -8px;
+}
+
+.nav-center .nav-label {
+    margin-top: 4px;
+}
+
+/* ===== 管理后台 ===== */
+.admin-header {
+    height: var(--header-h);
+    background: linear-gradient(135deg, #1a1a2e, #16213e);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 20px;
+    color: #fff;
+    flex-shrink: 0;
+}
+
+.admin-header h1 {
+    font-size: 18px;
+    font-weight: 600;
+}
+
+.btn-logout {
+    background: rgba(255,255,255,0.15);
+    color: #fff;
+    border: none;
+    border-radius: 6px;
+    padding: 6px 16px;
+    cursor: pointer;
+    font-size: 13px;
+    transition: all 0.3s;
+}
+
+.btn-logout:hover {
+    background: rgba(255,80,80,0.3);
+}
+
+.admin-stats-bar {
+    display: flex;
+    gap: 12px;
+    padding: 16px 20px;
+    background: #f5f5fa;
+    flex-shrink: 0;
+}
+
+.admin-stat-card {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    background: #fff;
+    border-radius: 12px;
+    padding: 12px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+}
+
+.stat-icon {
+    font-size: 28px;
+}
+
+.stat-value {
+    display: block;
+    font-size: 22px;
+    font-weight: 700;
+    color: #333;
+}
+
+.stat-name {
+    font-size: 11px;
+    color: #888;
+}
+
+.admin-tabs {
+    display: flex;
+    gap: 0;
+    background: #fff;
+    border-bottom: 2px solid #f0f0f0;
+    flex-shrink: 0;
+}
+
+.admin-tab {
+    flex: 1;
+    padding: 12px;
+    text-align: center;
+    background: none;
+    border: none;
+    cursor: pointer;
+    font-size: 14px;
+    color: #888;
+    border-bottom: 3px solid transparent;
+    transition: all 0.3s;
+}
+
+.admin-tab.active {
+    color: #4a90d9;
+    border-bottom-color: #4a90d9;
+    font-weight: 600;
+}
+
+.admin-content {
+    flex: 1;
+    overflow-y: auto;
+    padding: 16px 20px;
+    background: #f5f5fa;
+}
+
+.admin-tab-content {
+    display: none;
+}
+
+.admin-tab-content.active {
+    display: block;
+}
+
+.admin-table {
+    width: 100%;
+    border-collapse: collapse;
+    background: #fff;
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+}
+
+.admin-table th {
+    background: #f8f8fc;
+    padding: 10px 12px;
+    text-align: left;
+    font-size: 12px;
+    color: #888;
+    font-weight: 600;
+    white-space: nowrap;
+}
+
+.admin-table td {
+    padding: 10px 12px;
+    font-size: 13px;
+    border-top: 1px solid #f0f0f5;
+}
+
+.admin-table tr:hover {
+    background: #fafaff;
+}
+
+.admin-section {
+    margin-bottom: 24px;
+}
+
+.admin-section h3 {
+    font-size: 16px;
+    margin-bottom: 12px;
+}
+
+.btn-admin-action {
+    background: #f0f0f5;
+    border: none;
+    border-radius: 6px;
+    padding: 4px 10px;
+    font-size: 12px;
+    cursor: pointer;
+    margin-right: 4px;
+    color: #555;
+}
+
+.btn-admin-action.danger {
+    background: #ffe0e0;
+    color: #d33;
+}
+
+.btn-admin-action.success {
+    background: #d4f5f0;
+    color: #2a9d8f;
+}
+
+.quote-admin-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    background: #fff;
+    border-radius: 8px;
+    padding: 12px;
+    margin-bottom: 8px;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.04);
+}
+
+.quote-admin-text {
+    flex: 1;
+    font-size: 14px;
+}
+
+.quote-admin-category {
+    font-size: 12px;
+    color: #888;
+    background: #f0f0f5;
+    padding: 2px 8px;
+    border-radius: 4px;
+}
+
+/* ===== 模态框 ===== */
+.modal-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.5);
+    z-index: 1000;
+    display: flex;
+    align-items: flex-end;
+    justify-content: center;
+    animation: fadeIn 0.3s ease;
+}
+
+.modal-sheet {
+    background: #fff;
+    border-radius: 24px 24px 0 0;
+    width: 100%;
+    max-width: 500px;
+    max-height: 85vh;
+    overflow-y: auto;
+    padding: 20px;
+    animation: slideUp 0.3s ease;
+    padding-bottom: calc(20px + var(--safe-bottom));
+}
+
+.modal-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 16px;
+}
+
+.modal-title {
+    font-size: 18px;
+    font-weight: 600;
+}
+
+.modal-close {
+    background: #f0e0e5;
+    border: none;
+    border-radius: 50%;
+    width: 32px;
+    height: 32px;
+    font-size: 16px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.modal-body {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+}
+
+.modal-textarea {
+    width: 100%;
+    min-height: 100px;
+    border: 2px solid var(--border);
+    border-radius: var(--radius-sm);
+    padding: 12px;
+    font-size: 14px;
+    resize: vertical;
+    font-family: inherit;
+    outline: none;
+    transition: border-color 0.3s;
+}
+
+.modal-textarea:focus {
+    border-color: var(--primary);
+}
+
+.modal-input {
+    width: 100%;
+    height: 44px;
+    border: 2px solid var(--border);
+    border-radius: var(--radius-sm);
+    padding: 0 12px;
+    font-size: 14px;
+    outline: none;
+    transition: border-color 0.3s;
+}
+
+.modal-input:focus {
+    border-color: var(--primary);
+}
+
+.mood-selector {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+
+.mood-option {
+    padding: 6px 12px;
+    background: #f8f4f6;
+    border: 2px solid transparent;
+    border-radius: 20px;
+    cursor: pointer;
+    font-size: 13px;
+    transition: all 0.3s;
+}
+
+.mood-option.selected {
+    background: var(--primary-light);
+    border-color: var(--primary);
+    color: var(--primary-dark);
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+@keyframes slideUp {
+    from { transform: translateY(100%); }
+    to { transform: translateY(0); }
+}
+
+/* ===== Toast ===== */
+#toastContainer {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    z-index: 9999;
+    pointer-events: none;
+}
+
+.toast {
+    background: rgba(0,0,0,0.8);
+    color: #fff;
+    padding: 12px 24px;
+    border-radius: 12px;
+    font-size: 14px;
+    text-align: center;
+    animation: toastIn 0.3s ease, toastOut 0.3s ease 2s forwards;
+    backdrop-filter: blur(10px);
+}
+
+.toast.success { background: rgba(78, 205, 196, 0.9); }
+.toast.error { background: rgba(255, 107, 107, 0.9); }
+.toast.love { background: rgba(255, 107, 157, 0.9); }
+
+@keyframes toastIn {
+    from { opacity: 0; transform: scale(0.8); }
+    to { opacity: 1; transform: scale(1); }
+}
+
+@keyframes toastOut {
+    to { opacity: 0; transform: scale(0.9); }
+}
+
+/* ===== 动画特效 ===== */
+.float-heart {
+    position: fixed;
+    font-size: 24px;
+    pointer-events: none;
+    z-index: 999;
+    animation: floatHeartUp 1.5s ease-out forwards;
+}
+
+@keyframes floatHeartUp {
+    0% { opacity: 1; transform: scale(0.5) translateY(0); }
+    50% { opacity: 1; transform: scale(1.2) translateY(-60px); }
+    100% { opacity: 0; transform: scale(0.8) translateY(-120px); }
+}
+
+/* ===== 响应式 ===== */
+@media (min-width: 500px) {
+    .auth-card { width: 90%; }
+}
+
+@media (max-width: 360px) {
+    .quick-actions { grid-template-columns: repeat(2, 1fr); }
+    .admin-stats-bar { flex-wrap: wrap; }
+    .admin-stat-card { min-width: 45%; }
+}
+
+/* 滚动条美化 */
+::-webkit-scrollbar { width: 0; }
+
+/* ===== 快捷入口行 ===== */
+.quick-entry-row {
+    display: flex;
+    gap: 12px;
+    margin: 12px 0 0;
+}
+.quick-entry {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    padding: 12px;
+    background: var(--bg-card);
+    border-radius: var(--radius-md);
+    box-shadow: var(--shadow-sm);
+    font-size: 13px;
+    color: var(--text-secondary);
+    cursor: pointer;
+    transition: transform 0.2s;
+}
+.quick-entry:active { transform: scale(0.95); }
+.quick-entry span:first-child { font-size: 20px; }
+
+/* ===== 玩乐中心 ===== */
+.blindbox-card {
+    background: linear-gradient(135deg, #ff9a56, #ff6b9d);
+    border-radius: var(--radius-md);
+    padding: 0;
+    margin-bottom: 16px;
+    cursor: pointer;
+    box-shadow: var(--shadow-md);
+    transition: transform 0.2s;
+}
+.blindbox-card:active { transform: scale(0.97); }
+.blindbox-inner {
+    display: flex;
+    align-items: center;
+    padding: 16px;
+    gap: 12px;
+}
+.blindbox-icon {
+    font-size: 40px;
+    animation: blindbox-shake 2s ease-in-out infinite;
+}
+@keyframes blindbox-shake {
+    0%, 100% { transform: rotate(0deg); }
+    25% { transform: rotate(-8deg); }
+    75% { transform: rotate(8deg); }
+}
+.blindbox-info { flex: 1; }
+.blindbox-title { font-size: 16px; font-weight: 700; color: #fff; }
+.blindbox-desc { font-size: 13px; color: rgba(255,255,255,0.85); margin-top: 4px; }
+.blindbox-arrow { font-size: 24px; color: rgba(255,255,255,0.6); }
+
+/* 玩乐网格 */
+.fun-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 12px;
+}
+.fun-card {
+    background: var(--bg-card);
+    border-radius: var(--radius-md);
+    padding: 16px 12px;
+    text-align: center;
+    box-shadow: var(--shadow-sm);
+    cursor: pointer;
+    transition: transform 0.2s, box-shadow 0.2s;
+}
+.fun-card:active {
+    transform: scale(0.95);
+    box-shadow: var(--shadow-md);
+}
+.fun-card-icon { font-size: 36px; margin-bottom: 8px; }
+.fun-card-name { font-size: 14px; font-weight: 600; color: var(--text-main); }
+.fun-card-desc { font-size: 12px; color: var(--text-secondary); margin-top: 4px; }
+
+/* ===== 玩乐弹窗 ===== */
+.fun-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.5);
+    z-index: 500;
+    display: flex;
+    align-items: flex-end;
+    justify-content: center;
+    animation: fadeIn 0.2s;
+}
+.fun-modal {
+    background: var(--bg-main);
+    width: 100%;
+    max-width: 420px;
+    max-height: 85vh;
+    border-radius: 24px 24px 0 0;
+    display: flex;
+    flex-direction: column;
+    animation: slideUp 0.3s ease-out;
+}
+@keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+@keyframes slideUp { from { transform: translateY(100%); } to { transform: translateY(0); } }
+.fun-modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 16px 20px;
+    border-bottom: 1px solid var(--border);
+    background: var(--bg-card);
+    border-radius: 24px 24px 0 0;
+}
+.fun-modal-header h2 { font-size: 18px; color: var(--text-main); }
+.fun-close {
+    background: none; border: none; font-size: 20px; color: var(--text-secondary);
+    cursor: pointer; padding: 4px 8px;
+}
+.fun-modal-body {
+    padding: 20px;
+    overflow-y: auto;
+    flex: 1;
+}
+
+/* 盲盒结果 */
+.blindbox-result { text-align: center; padding: 20px 0; }
+.blindbox-big-icon { font-size: 64px; margin-bottom: 12px; }
+.blindbox-result h3 { font-size: 20px; color: var(--primary); margin-bottom: 8px; }
+.blindbox-result p { color: var(--text-secondary); margin-bottom: 16px; }
+.blindbox-status.done { color: var(--success); font-weight: 600; }
+.blindbox-opening { text-align: center; padding: 16px 0; }
+.blindbox-shake { font-size: 56px; animation: blindbox-shake 0.5s ease-in-out infinite; margin-bottom: 12px; }
+.blindbox-task-desc { color: var(--text-secondary); margin: 8px 0 20px; font-size: 15px; }
+
+/* 真心话大冒险 */
+.td-container { text-align: center; padding: 20px 0; }
+.td-wheel { font-size: 72px; transition: all 0.1s; }
+.td-label { font-size: 22px; font-weight: 700; color: var(--primary); margin: 8px 0 20px; }
+.td-content { margin-top: 16px; }
+.td-question {
+    font-size: 18px; line-height: 1.6; color: var(--text-main);
+    background: var(--bg-card); padding: 20px; border-radius: var(--radius-md);
+    margin-bottom: 16px; box-shadow: var(--shadow-sm);
+}
+
+/* 默契问答 */
+.quiz-progress {
+    display: flex; align-items: center; gap: 8px; margin-bottom: 20px;
+}
+.quiz-progress-bar {
+    height: 6px; background: var(--primary); border-radius: 3px;
+    transition: width 0.3s; flex: 1;
+}
+.quiz-progress span { font-size: 12px; color: var(--text-secondary); white-space: nowrap; }
+.quiz-question { font-size: 18px; margin-bottom: 16px; color: var(--text-main); text-align: center; }
+.quiz-options { display: flex; flex-direction: column; gap: 10px; }
+.quiz-option {
+    padding: 14px; background: var(--bg-card); border: 2px solid var(--border);
+    border-radius: var(--radius-md); font-size: 15px; color: var(--text-main);
+    cursor: pointer; transition: all 0.2s; text-align: center;
+}
+.quiz-option:active { border-color: var(--primary); background: var(--primary-light); transform: scale(0.97); }
+.quiz-result { text-align: center; padding: 20px 0; }
+.quiz-score-ring {
+    width: 100px; height: 100px; border-radius: 50%; margin: 0 auto 16px;
+    background: var(--primary-gradient); display: flex; flex-direction: column;
+    align-items: center; justify-content: center; color: #fff;
+}
+.quiz-score-num { font-size: 36px; font-weight: 700; }
+.quiz-score-total { font-size: 14px; opacity: 0.8; }
+
+/* 表白墙 */
+.lovewall-input { margin-bottom: 20px; }
+.lovewall-input textarea {
+    width: 100%; min-height: 80px; padding: 12px; border: 2px solid var(--border);
+    border-radius: var(--radius-md); font-size: 14px; resize: none; background: var(--bg-card);
+    color: var(--text-main); box-sizing: border-box;
+}
+.lovewall-input textarea:focus { border-color: var(--primary); outline: none; }
+.lovewall-list { display: flex; flex-direction: column; gap: 12px; }
+.lovewall-item {
+    background: var(--bg-card); padding: 14px; border-radius: var(--radius-md);
+    box-shadow: var(--shadow-sm); border-left: 3px solid var(--primary);
+}
+.lovewall-item.mine { border-left-color: var(--success); background: #f0fff9; }
+.lovewall-author { font-size: 13px; font-weight: 600; color: var(--primary); margin-bottom: 4px; }
+.lovewall-text { font-size: 14px; color: var(--text-main); line-height: 1.5; }
+.lovewall-time { font-size: 11px; color: var(--text-light); margin-top: 6px; }
+
+/* 成就徽章 */
+.achievements-grid { display: flex; flex-direction: column; gap: 10px; }
+.achievement {
+    display: flex; align-items: center; gap: 12px; padding: 12px;
+    border-radius: var(--radius-md); transition: all 0.2s;
+}
+.achievement.unlocked {
+    background: linear-gradient(135deg, #fff5f7, #ffe8d6);
+    box-shadow: var(--shadow-sm);
+}
+.achievement.locked { background: #f5f5f5; opacity: 0.6; }
+.ach-icon { font-size: 32px; width: 48px; text-align: center; }
+.ach-name { font-size: 15px; font-weight: 600; color: var(--text-main); }
+.ach-desc { font-size: 12px; color: var(--text-secondary); }
+.ach-stats { text-align: center; margin-top: 16px; font-size: 14px; color: var(--text-secondary); }
+
+/* 晚安打卡 */
+.goodnight-container { text-align: center; padding: 12px 0; }
+.goodnight-moon { font-size: 64px; margin-bottom: 8px; }
+.goodnight-streak { margin: 16px 0; }
+.streak-num { display: block; font-size: 40px; font-weight: 700; color: var(--primary); }
+.streak-label { font-size: 14px; color: var(--text-secondary); }
+.goodnight-msg { color: var(--text-secondary); margin-bottom: 16px; }
+.goodnight-history { margin-top: 20px; text-align: left; }
+.gn-record { font-size: 13px; color: var(--text-secondary); padding: 6px 0; border-bottom: 1px solid var(--border); }
+
+/* 时空信件 */
+.letter-intro { margin-bottom: 16px; color: var(--text-secondary); font-size: 14px; }
+.letter-form { display: flex; flex-direction: column; gap: 10px; margin-bottom: 20px; }
+.letter-date-input {
+    padding: 10px; border: 2px solid var(--border); border-radius: var(--radius-sm);
+    font-size: 14px; background: var(--bg-card); color: var(--text-main);
+}
+.letter-form textarea {
+    min-height: 100px; padding: 12px; border: 2px solid var(--border);
+    border-radius: var(--radius-md); font-size: 14px; resize: none; background: var(--bg-card);
+    color: var(--text-main); box-sizing: border-box;
+}
+.letter-list { display: flex; flex-direction: column; gap: 10px; }
+.letter-item {
+    padding: 12px; border-radius: var(--radius-md); background: var(--bg-card);
+    box-shadow: var(--shadow-sm);
+}
+.letter-item.unlocked { border-left: 3px solid var(--primary); }
+.letter-item.locked { border-left: 3px solid var(--text-light); opacity: 0.7; }
+.letter-date { font-size: 12px; color: var(--text-secondary); margin-bottom: 6px; }
+.letter-content { font-size: 14px; color: var(--text-main); line-height: 1.5; }
+.letter-locked { font-size: 14px; color: var(--text-light); }
+
+/* 爱情温度计 */
+.love-meter-container { text-align: center; padding: 12px 0; }
+.love-meter-total { margin-bottom: 24px; }
+.meter-circle {
+    width: 140px; height: 140px; border-radius: 50%; margin: 0 auto;
+    display: flex; align-items: center; justify-content: center;
+    transition: background 0.5s;
+}
+.meter-inner {
+    width: 110px; height: 110px; border-radius: 50%; background: #fff;
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+}
+.meter-num { font-size: 36px; font-weight: 700; color: var(--primary); }
+.meter-level { font-size: 13px; color: var(--text-secondary); margin-top: 2px; }
+.meter-bars { display: flex; flex-direction: column; gap: 14px; }
+.meter-bar-item { display: flex; align-items: center; gap: 8px; }
+.meter-bar-label { font-size: 13px; width: 70px; text-align: right; color: var(--text-secondary); }
+.meter-bar-track {
+    flex: 1; height: 10px; background: #f0e0e5; border-radius: 5px; overflow: hidden;
+}
+.meter-bar-fill {
+    height: 100%; background: var(--primary-gradient); border-radius: 5px;
+    transition: width 0.5s;
+}
+.meter-bar-val { font-size: 13px; font-weight: 600; color: var(--primary); width: 36px; }
+
+/* 约会转盘 */
+.date-wheel-container { text-align: center; padding: 20px 0; }
+.date-wheel { font-size: 72px; margin-bottom: 16px; }
+.date-result-card {
+    background: var(--bg-card); padding: 20px; border-radius: var(--radius-md);
+    box-shadow: var(--shadow-sm); margin-top: 12px;
+}
+.date-big-icon { font-size: 48px; margin-bottom: 8px; }
+.date-result-card h3 { font-size: 20px; color: var(--primary); margin-bottom: 6px; }
+.date-result-card p { font-size: 14px; color: var(--text-secondary); margin-bottom: 16px; }
+
+/* 空提示 */
+.empty-tip { text-align: center; color: var(--text-light); padding: 24px 0; font-size: 14px; }
+
+</style>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div id="app">
+        <!-- 加载动画 -->
+        <div id="splash" class="splash-screen">
+            <div class="splash-heart">💕</div>
+            <p class="splash-title">LoveNest</p>
+            <p class="splash-subtitle">恋爱小窝</p>
+        </div>
+
+        <!-- 登录页 -->
+        <div id="loginPage" class="page active">
+            <div class="auth-bg">
+                <div class="floating-hearts">
+                    <span>💕</span><span>💖</span><span>💗</span><span>💓</span><span>💕</span>
+                </div>
+            </div>
+            <div class="auth-card">
+                <div class="auth-logo">
+                    <div class="logo-icon">💑</div>
+                    <h1>LoveNest</h1>
+                    <p>属于你们恋爱小窝</p>
+                </div>
+                <form id="loginForm" class="auth-form">
+                    <div class="input-group">
+                        <div class="input-icon">📱</div>
+                        <input type="tel" id="loginPhone" placeholder="手机号" maxlength="11" required>
+                    </div>
+                    <div class="input-group">
+                        <div class="input-icon">🔒</div>
+                        <input type="password" id="loginPassword" placeholder="密码" required>
+                    </div>
+                    <button type="submit" class="btn-primary">登录 ❤</button>
+                    <p class="auth-switch">还没有账号？<a href="#" onclick="showPage('registerPage')">立即注册</a></p>
+                    <p class="auth-switch"><a href="#" onclick="showPage('adminLoginPage')">管理员入口</a></p>
+                </form>
+            </div>
+        </div>
+
+        <!-- 注册页 -->
+        <div id="registerPage" class="page">
+            <div class="auth-bg">
+                <div class="floating-hearts">
+                    <span>✨</span><span>💝</span><span>🌹</span><span>💫</span><span>✨</span>
+                </div>
+            </div>
+            <div class="auth-card">
+                <div class="auth-logo">
+                    <div class="logo-icon">💞</div>
+                    <h1>加入LoveNest</h1>
+                    <p>开启你们的甜蜜旅程</p>
+                </div>
+                <form id="registerForm" class="auth-form">
+                    <div class="input-group">
+                        <div class="input-icon">👤</div>
+                        <input type="text" id="regNickname" placeholder="昵称" required>
+                    </div>
+                    <div class="input-group">
+                        <div class="input-icon">📱</div>
+                        <input type="tel" id="regPhone" placeholder="手机号" maxlength="11" required>
+                    </div>
+                    <div class="input-group">
+                        <div class="input-icon">🔒</div>
+                        <input type="password" id="regPassword" placeholder="设置密码 (至少6位)" required>
+                    </div>
+                    <div class="input-group">
+                        <div class="input-icon">🤝</div>
+                        <input type="text" id="regInviteCode" placeholder="邀请码 (选填，伴侣分享的码)">
+                    </div>
+                    <div class="gender-select">
+                        <label class="gender-option">
+                            <input type="radio" name="gender" value="male" required>
+                            <span>👦 男生</span>
+                        </label>
+                        <label class="gender-option">
+                            <input type="radio" name="gender" value="female" required>
+                            <span>👧 女生</span>
+                        </label>
+                    </div>
+                    <label class="checkbox-label">
+                        <input type="checkbox" id="agreeTerms" required>
+                        <span>我已阅读并同意<a href="#" onclick="showTerms()">《用户协议》</a></span>
+                    </label>
+                    <button type="submit" class="btn-primary">注册 💕</button>
+                    <p class="auth-switch">已有账号？<a href="#" onclick="showPage('loginPage')">返回登录</a></p>
+                </form>
+            </div>
+        </div>
+
+        <!-- 管理员登录页 -->
+        <div id="adminLoginPage" class="page">
+            <div class="auth-bg admin-bg">
+                <div class="floating-hearts">
+                    <span>⚙️</span><span>🛡️</span><span>📊</span><span>🔧</span><span>⚙️</span>
+                </div>
+            </div>
+            <div class="auth-card admin-card">
+                <div class="auth-logo">
+                    <div class="logo-icon">🛡️</div>
+                    <h1>管理后台</h1>
+                    <p>LoveNest Admin Panel</p>
+                </div>
+                <form id="adminLoginForm" class="auth-form">
+                    <div class="input-group">
+                        <div class="input-icon">👔</div>
+                        <input type="text" id="adminAccount" placeholder="管理员账号" required>
+                    </div>
+                    <div class="input-group">
+                        <div class="input-icon">🔑</div>
+                        <input type="password" id="adminPassword" placeholder="管理密码" required>
+                    </div>
+                    <button type="submit" class="btn-primary btn-admin">登录后台 🔐</button>
+                    <p class="auth-switch"><a href="#" onclick="showPage('loginPage')">← 返回用户登录</a></p>
+                </form>
+            </div>
+        </div>
+
+        <!-- 主应用 -->
+        <div id="mainApp" class="page">
+            <!-- 顶部状态栏 -->
+            <header class="app-header">
+                <div class="header-left">
+                    <div class="couple-avatars">
+                        <div class="avatar avatar-me" id="myAvatar">😊</div>
+                        <div class="heart-beat">💕</div>
+                        <div class="avatar avatar-partner" id="partnerAvatar">😍</div>
+                    </div>
+                </div>
+                <div class="header-center">
+                    <div class="couple-names" id="coupleNames">恋爱中</div>
+                    <div class="love-days" id="loveDays">第 0 天</div>
+                </div>
+                <div class="header-right">
+                    <button class="icon-btn" onclick="showNotifications()">🔔<span class="badge" id="notifBadge" style="display:none">0</span></button>
+                </div>
+            </header>
+
+            <!-- 内容区域 -->
+            <main class="app-content" id="mainContent">
+                <!-- 首页/甜蜜打卡 -->
+                <section id="tab-home" class="tab-section active">
+                    <div class="love-banner">
+                        <div class="banner-bg-gradient"></div>
+                        <div class="banner-content">
+                            <div class="love-score-ring">
+                                <svg viewBox="0 0 120 120" class="progress-ring">
+                                    <circle cx="60" cy="60" r="52" fill="none" stroke="rgba(255,255,255,0.2)" stroke-width="8"/>
+                                    <circle cx="60" cy="60" r="52" fill="none" stroke="#fff" stroke-width="8"
+                                        stroke-linecap="round" id="loveScoreCircle"
+                                        stroke-dasharray="326.7" stroke-dashoffset="326.7"
+                                        transform="rotate(-90 60 60)"/>
+                                </svg>
+                                <div class="score-text">
+                                    <span class="score-num" id="loveScore">0</span>
+                                    <span class="score-label">甜蜜值</span>
+                                </div>
+                            </div>
+                            <h2 class="banner-title" id="bannerTitle">今天也要甜甜的哦~</h2>
+                        </div>
+                    </div>
+
+                    <!-- 每日打卡 -->
+                    <div class="card-section">
+                        <h3 class="section-title">📋 每日任务</h3>
+                        <div class="daily-tasks" id="dailyTasks">
+                            <!-- 动态生成 -->
+                        </div>
+                    </div>
+
+                    <!-- 情话日历 -->
+                    <div class="card-section">
+                        <h3 class="section-title">💌 今日情话</h3>
+                        <div class="love-quote-card" id="loveQuote" onclick="refreshQuote()">
+                            <p class="quote-text">点击查看今日情话 💝</p>
+                            <span class="quote-refresh">换一句 🔄</span>
+                        </div>
+                    </div>
+
+                    <!-- 快捷操作 -->
+                    <div class="quick-actions">
+                        <button class="quick-btn" onclick="quickAction('love')">
+                            <span class="quick-icon">❤️</span>
+                            <span>比心</span>
+                        </button>
+                        <button class="quick-btn" onclick="quickAction('miss')">
+                            <span class="quick-icon">🥺</span>
+                            <span>想你</span>
+                        </button>
+                        <button class="quick-btn" onclick="quickAction('hug')">
+                            <span class="quick-icon">🤗</span>
+                            <span>抱抱</span>
+                        </button>
+                        <button class="quick-btn" onclick="quickAction('kiss')">
+                            <span class="quick-icon">💋</span>
+                            <span>亲亲</span>
+                        </button>
+                    </div>
+
+                    <!-- 快捷入口 -->
+                    <div class="quick-entry-row">
+                        <div class="quick-entry" onclick="switchTab('wishlist')">
+                            <span>🌟</span><span>愿望清单</span>
+                        </div>
+                        <div class="quick-entry" onclick="switchTab('fun')">
+                            <span>🎮</span><span>玩乐中心</span>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- 恋爱日记 -->
+                <section id="tab-diary" class="tab-section">
+                    <div class="section-header">
+                        <h2>📖 恋爱日记</h2>
+                        <button class="btn-add" onclick="showDiaryEditor()">✏️ 写日记</button>
+                    </div>
+                    <div class="diary-timeline" id="diaryTimeline">
+                        <!-- 动态生成 -->
+                    </div>
+                </section>
+
+                <!-- 愿望清单 -->
+                <section id="tab-wishlist" class="tab-section">
+                    <div class="section-header">
+                        <h2>🌟 愿望清单</h2>
+                        <button class="btn-add" onclick="showWishEditor()">➕ 添加愿望</button>
+                    </div>
+                    <div class="wish-stats">
+                        <div class="wish-stat">
+                            <span class="stat-num" id="wishTotal">0</span>
+                            <span class="stat-label">总愿望</span>
+                        </div>
+                        <div class="wish-stat">
+                            <span class="stat-num" id="wishDone">0</span>
+                            <span class="stat-label">已完成</span>
+                        </div>
+                        <div class="wish-stat">
+                            <span class="stat-num" id="wishProgress">0%</span>
+                            <span class="stat-label">完成率</span>
+                        </div>
+                    </div>
+                    <div class="wish-list" id="wishList">
+                        <!-- 动态生成 -->
+                    </div>
+                </section>
+
+                <!-- 纪念日 -->
+                <section id="tab-anniversary" class="tab-section">
+                    <div class="section-header">
+                        <h2>🎉 纪念日</h2>
+                        <button class="btn-add" onclick="showAnniversaryEditor()">➕ 添加</button>
+                    </div>
+                    <div class="countdown-banner">
+                        <div class="countdown-icon">⏰</div>
+                        <div class="countdown-info">
+                            <span class="countdown-label">距离下一个纪念日</span>
+                            <span class="countdown-days" id="nextAnnivDays">--</span>
+                            <span class="countdown-name" id="nextAnnivName">--</span>
+                        </div>
+                    </div>
+                    <div class="anniversary-list" id="anniversaryList">
+                        <!-- 动态生成 -->
+                    </div>
+                </section>
+
+                <!-- 玩乐中心 -->
+                <section id="tab-fun" class="tab-section">
+                    <div class="section-header">
+                        <h2>🎮 玩乐中心</h2>
+                    </div>
+
+                    <!-- 玩乐入口网格 -->
+                    <div class="fun-grid">
+                        <div class="fun-card" onclick="showTruthDare()">
+                            <div class="fun-card-icon">🎲</div>
+                            <div class="fun-card-name">真心话大冒险</div>
+                            <div class="fun-card-desc">转盘选挑战</div>
+                        </div>
+                        <div class="fun-card" onclick="showRandomDate()">
+                            <div class="fun-card-icon">🎰</div>
+                            <div class="fun-card-name">约会转盘</div>
+                            <div class="fun-card-desc">不知道去哪转转</div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- 个人中心 -->
+                <section id="tab-profile" class="tab-section">
+                    <div class="profile-header">
+                        <div class="profile-avatar" id="profileAvatar">😊</div>
+                        <h2 class="profile-name" id="profileName">用户</h2>
+                        <p class="profile-phone" id="profilePhone">--</p>
+                        <div class="profile-badge" id="profileBadge">单身模式</div>
+                    </div>
+                    <div class="profile-menu">
+                        <div class="menu-item" onclick="showInviteModal()">
+                            <span class="menu-icon">🔗</span>
+                            <span class="menu-text">邀请伴侣</span>
+                            <span class="menu-arrow">›</span>
+                        </div>
+                        <div class="menu-item" onclick="showMyInvites()">
+                            <span class="menu-icon">💌</span>
+                            <span class="menu-text">我的邀请码</span>
+                            <span class="menu-arrow">›</span>
+                        </div>
+                        <div class="menu-item" onclick="editProfile()">
+                            <span class="menu-icon">✏️</span>
+                            <span class="menu-text">编辑资料</span>
+                            <span class="menu-arrow">›</span>
+                        </div>
+                        <div class="menu-item" onclick="showSettings()">
+                            <span class="menu-icon">⚙️</span>
+                            <span class="menu-text">设置</span>
+                            <span class="menu-arrow">›</span>
+                        </div>
+                        <div class="menu-item menu-logout" onclick="logout()">
+                            <span class="menu-icon">🚪</span>
+                            <span class="menu-text">退出登录</span>
+                            <span class="menu-arrow">›</span>
+                        </div>
+                    </div>
+                </section>
+            </main>
+
+            <!-- 底部导航 -->
+            <nav class="bottom-nav">
+                <button class="nav-item active" data-tab="home" onclick="switchTab('home')">
+                    <span class="nav-icon">🏠</span>
+                    <span class="nav-label">首页</span>
+                </button>
+                <button class="nav-item" data-tab="diary" onclick="switchTab('diary')">
+                    <span class="nav-icon">📖</span>
+                    <span class="nav-label">日记</span>
+                </button>
+                <button class="nav-item nav-center" data-tab="fun" onclick="switchTab('fun')">
+                    <span class="nav-icon">🎮</span>
+                    <span class="nav-label">玩</span>
+                </button>
+                <button class="nav-item" data-tab="anniversary" onclick="switchTab('anniversary')">
+                    <span class="nav-icon">🎉</span>
+                    <span class="nav-label">纪念</span>
+                </button>
+                <button class="nav-item" data-tab="profile" onclick="switchTab('profile')">
+                    <span class="nav-icon">👤</span>
+                    <span class="nav-label">我的</span>
+                </button>
+            </nav>
+        </div>
+
+        <!-- 管理后台 -->
+        <div id="adminPanel" class="page">
+            <header class="admin-header">
+                <h1>🛡️ LoveNest 管理后台</h1>
+                <button class="btn-logout" onclick="adminLogout()">退出</button>
+            </header>
+            <div class="admin-stats-bar">
+                <div class="admin-stat-card">
+                    <span class="stat-icon">👥</span>
+                    <div>
+                        <span class="stat-value" id="adminTotalUsers">0</span>
+                        <span class="stat-name">总用户</span>
+                    </div>
+                </div>
+                <div class="admin-stat-card">
+                    <span class="stat-icon">💑</span>
+                    <div>
+                        <span class="stat-value" id="adminTotalCouples">0</span>
+                        <span class="stat-name">情侣对数</span>
+                    </div>
+                </div>
+                <div class="admin-stat-card">
+                    <span class="stat-icon">📖</span>
+                    <div>
+                        <span class="stat-value" id="adminTotalDiaries">0</span>
+                        <span class="stat-name">日记总数</span>
+                    </div>
+                </div>
+                <div class="admin-stat-card">
+                    <span class="stat-icon">🌟</span>
+                    <div>
+                        <span class="stat-value" id="adminTotalWishes">0</span>
+                        <span class="stat-name">愿望总数</span>
+                    </div>
+                </div>
+            </div>
+            <div class="admin-tabs">
+                <button class="admin-tab active" onclick="adminSwitchTab('users')">用户管理</button>
+                <button class="admin-tab" onclick="adminSwitchTab('couples')">情侣关系</button>
+                <button class="admin-tab" onclick="adminSwitchTab('content')">内容管理</button>
+                <button class="admin-tab" onclick="adminSwitchTab('quotes')">情话库</button>
+            </div>
+            <div class="admin-content">
+                <div id="adminTab-users" class="admin-tab-content active">
+                    <table class="admin-table">
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>昵称</th>
+                                <th>手机号</th>
+                                <th>密码</th>
+                                <th>性别</th>
+                                <th>状态</th>
+                                <th>注册时间</th>
+                                <th>操作</th>
+                            </tr>
+                        </thead>
+                        <tbody id="adminUserList"></tbody>
+                    </table>
+                </div>
+                <div id="adminTab-couples" class="admin-tab-content">
+                    <table class="admin-table">
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>用户A</th>
+                                <th>用户B</th>
+                                <th>在一起天数</th>
+                                <th>甜蜜值</th>
+                                <th>操作</th>
+                            </tr>
+                        </thead>
+                        <tbody id="adminCoupleList"></tbody>
+                    </table>
+                </div>
+                <div id="adminTab-content" class="admin-tab-content">
+                    <div class="admin-section">
+                        <h3>📖 日记管理</h3>
+                        <table class="admin-table">
+                            <thead>
+                                <tr>
+                                    <th>ID</th>
+                                    <th>作者</th>
+                                    <th>标题</th>
+                                    <th>日期</th>
+                                    <th>操作</th>
+                                </tr>
+                            </thead>
+                            <tbody id="adminDiaryList"></tbody>
+                        </table>
+                    </div>
+                    <div class="admin-section">
+                        <h3>🌟 愿望管理</h3>
+                        <table class="admin-table">
+                            <thead>
+                                <tr>
+                                    <th>ID</th>
+                                    <th>用户</th>
+                                    <th>愿望内容</th>
+                                    <th>状态</th>
+                                    <th>操作</th>
+                                </tr>
+                            </thead>
+                            <tbody id="adminWishList"></tbody>
+                        </table>
+                    </div>
+                </div>
+                <div id="adminTab-quotes" class="admin-tab-content">
+                    <div class="admin-section">
+                        <div class="section-header">
+                            <h3>💌 情话库管理</h3>
+                            <button class="btn-add" onclick="showQuoteEditor()">➕ 添加情话</button>
+                        </div>
+                        <div id="adminQuoteList" class="quote-admin-list"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 玩乐中心弹窗层 -->
+        <div id="funModalLayer"></div>
+
+        <!-- 模态框容器 -->
+        <div id="modalContainer"></div>
+        <!-- Toast通知 -->
+        <div id="toastContainer"></div>
+    </div>
+
+    <script>
+/**
+ * LoveNest 数据层 - 云端同步版 v2 (JSONBin.io)
+ * 修复：所有写操作都 await 确保推送完成
+ */
+
+// ===== JSONBin 配置 =====
+const JSONBIN = {
+    BASE_URL: 'https://api.jsonbin.io/v3/b',
+    MASTER_KEY: '$2a$10$GN0OqW.mNe1Xin03BlYkiO8dJypMNtrIDhBnH10zDIdt8am1ft5Mu',
+    BIN_ID: '6a3f7230da38895dfe064444'
+};
+
+// ===== 数据键名 =====
+const DB_KEYS = {
+    USERS: 'lovenest_users',
+    COUPLES: 'lovenest_couples',
+    DIARIES: 'lovenest_diaries',
+    WISHES: 'lovenest_wishes',
+    ANNIVERSARIES: 'lovenest_anniversaries',
+    QUOTES: 'lovenest_quotes',
+    TASKS: 'lovenest_tasks',
+    NOTIFICATIONS: 'lovenest_notifications',
+    SESSION: 'lovenest_session',
+    ADMIN_SESSION: 'lovenest_admin_session',
+    DAILY_TASK_STATE: 'lovenest_daily_task_state'
+};
+
+// ===== 默认管理员 =====
+const DEFAULT_ADMIN = {
+    account: 'admin',
+    password: 'admin123'
+};
+
+// ===== 默认情话库 =====
+const DEFAULT_QUOTES = [
+    { id: 'q1', text: '你是我最爱的宝贝，每一天都更爱你一点。', category: '甜蜜' },
+    { id: 'q2', text: '遇见你是我这辈子最大的幸运。', category: '浪漫' },
+    { id: 'q3', text: '想和你一起看日出日落，数星星月亮。', category: '浪漫' },
+    { id: 'q4', text: '你的笑容是我每天早起的动力。', category: '甜蜜' },
+    { id: 'q5', text: '不管世界怎么变，我对你的心永远不变。', category: '深情' },
+    { id: 'q6', text: '你是我的星辰大海，我的全部宇宙。', category: '浪漫' },
+    { id: 'q7', text: '余生很长，请多指教，我的爱人。', category: '深情' },
+    { id: 'q8', text: '每天醒来第一件事就是想你，最后一件事也是想你。', category: '甜蜜' },
+    { id: 'q9', text: '你的手好暖，我想牵一辈子。', category: '甜蜜' },
+    { id: 'q10', text: '世界那么大，我只想和你在一起。', category: '深情' },
+    { id: 'q11', text: '你是我耳机里的歌，是我心里的诗。', category: '浪漫' },
+    { id: 'q12', text: '如果爱有形状，那一定是你的样子。', category: '深情' },
+    { id: 'q13', text: '每一次心跳，都是在对你说我爱你。', category: '甜蜜' },
+    { id: 'q14', text: '想把你藏进口袋里，走到哪带到哪。', category: '可爱' },
+    { id: 'q15', text: '和你在一起的每一秒，都是限量版。', category: '浪漫' }
+];
+
+// ===== 默认每日任务模板 =====
+const DEFAULT_TASK_TEMPLATES = [
+    { id: 't1', text: '对TA说一句"我爱你"', reward: 10, icon: '❤️' },
+    { id: 't2', text: '给TA发一张自拍', reward: 10, icon: '📸' },
+    { id: 't3', text: '和TA视频通话5分钟', reward: 15, icon: '📹' },
+    { id: 't4', text: '分享一首歌给TA', reward: 10, icon: '🎵' },
+    { id: 't5', text: '说一句早安/晚安', reward: 5, icon: '🌅' }
+];
+
+// ===== 云端缓存（内存） =====
+let CLOUD_CACHE = {};
+
+// ===== 云端API封装 =====
+const CloudDB = {
+    // 初始化：拉取云端数据
+    async init() {
+        await this.pull();
+        console.log('[CloudDB] 初始化完成, Bin ID:', JSONBIN.BIN_ID);
+    },
+
+    // 从云端拉取全部数据
+    async pull() {
+        if (!JSONBIN.BIN_ID) return;
+        try {
+            const res = await fetch(`${JSONBIN.BASE_URL}/${JSONBIN.BIN_ID}/latest`, {
+                headers: { 'X-Master-Key': JSONBIN.MASTER_KEY }
+            });
+            if (!res.ok) {
+                console.error('[CloudDB] 拉取失败 HTTP', res.status);
+                return;
+            }
+            const data = await res.json();
+            CLOUD_CACHE = data.record || {};
+            console.log('[CloudDB] 拉取成功, users:', (CLOUD_CACHE.lovenest_users || []).length);
+        } catch (e) {
+            console.error('[CloudDB] 拉取失败:', e);
+        }
+    },
+
+    // 推送全部数据到云端
+    async push() {
+        if (!JSONBIN.BIN_ID) return false;
+        try {
+            const res = await fetch(`${JSONBIN.BASE_URL}/${JSONBIN.BIN_ID}`, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-Master-Key': JSONBIN.MASTER_KEY
+                },
+                body: JSON.stringify(CLOUD_CACHE)
+            });
+            if (!res.ok) {
+                console.error('[CloudDB] 推送失败 HTTP', res.status);
+                return false;
+            }
+            console.log('[CloudDB] 推送成功, users:', (CLOUD_CACHE.lovenest_users || []).length);
+            return true;
+        } catch (e) {
+            console.error('[CloudDB] 推送失败:', e);
+            return false;
+        }
+    }
+};
+
+// ===== 数据操作工具 =====
+const DB = {
+    get(key) {
+        if (CLOUD_CACHE[key] !== undefined) return CLOUD_CACHE[key];
+        // 回退到 LocalStorage（仅用于 session 等本地数据）
+        try {
+            const data = localStorage.getItem(key);
+            return data ? JSON.parse(data) : null;
+        } catch (e) {
+            return null;
+        }
+    },
+
+    // ⚠️ 所有数据写入都用这个 —— 确保推送到云端
+    async set(key, value) {
+        CLOUD_CACHE[key] = value;
+        try { localStorage.setItem(key, JSON.stringify(value)); } catch(e) {}
+        await CloudDB.push();
+    },
+
+    // 同步版仅用于 session 等不需要同步的数据
+    setLocal(key, value) {
+        try { localStorage.setItem(key, JSON.stringify(value)); } catch(e) {}
+    },
+
+    getLocal(key) {
+        try {
+            const data = localStorage.getItem(key);
+            return data ? JSON.parse(data) : null;
+        } catch (e) {
+            return null;
+        }
+    },
+
+    removeLocal(key) {
+        localStorage.removeItem(key);
+    },
+
+    genId(prefix = 'id') {
+        return `${prefix}_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
+    },
+
+    genInviteCode() {
+        const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+        let code = '';
+        for (let i = 0; i < 6; i++) {
+            code += chars[Math.floor(Math.random() * chars.length)];
+        }
+        return code;
+    },
+
+    async sync() {
+        await CloudDB.pull();
+    }
+};
+
+// ===== 初始化默认数据 =====
+async function initDataBase() {
+    await CloudDB.init();
+
+    // 确保云端有基础数据
+    let needPush = false;
+    if (!CLOUD_CACHE[DB_KEYS.QUOTES]) { CLOUD_CACHE[DB_KEYS.QUOTES] = DEFAULT_QUOTES; needPush = true; }
+    if (!CLOUD_CACHE[DB_KEYS.USERS]) { CLOUD_CACHE[DB_KEYS.USERS] = []; needPush = true; }
+    if (!CLOUD_CACHE[DB_KEYS.COUPLES]) { CLOUD_CACHE[DB_KEYS.COUPLES] = []; needPush = true; }
+    if (!CLOUD_CACHE[DB_KEYS.DIARIES]) { CLOUD_CACHE[DB_KEYS.DIARIES] = []; needPush = true; }
+    if (!CLOUD_CACHE[DB_KEYS.WISHES]) { CLOUD_CACHE[DB_KEYS.WISHES] = []; needPush = true; }
+    if (!CLOUD_CACHE[DB_KEYS.ANNIVERSARIES]) { CLOUD_CACHE[DB_KEYS.ANNIVERSARIES] = []; needPush = true; }
+    if (!CLOUD_CACHE[DB_KEYS.NOTIFICATIONS]) { CLOUD_CACHE[DB_KEYS.NOTIFICATIONS] = []; needPush = true; }
+    if (!CLOUD_CACHE[DB_KEYS.TASKS]) { CLOUD_CACHE[DB_KEYS.TASKS] = DEFAULT_TASK_TEMPLATES; needPush = true; }
+    if (!CLOUD_CACHE[DB_KEYS.DAILY_TASK_STATE]) { CLOUD_CACHE[DB_KEYS.DAILY_TASK_STATE] = {}; needPush = true; }
+    
+    if (needPush) await CloudDB.push();
+}
+
+// ===== 用户操作 =====
+const UserAPI = {
+    async register({ nickname, phone, password, gender, inviteCode }) {
+        // 拉取最新数据
+        await CloudDB.pull();
+
+        const users = DB.get(DB_KEYS.USERS) || [];
+
+        if (!/^1[3-9]\d{9}$/.test(phone)) {
+            return { success: false, message: '手机号格式不正确' };
+        }
+        if (users.find(u => u.phone === phone)) {
+            return { success: false, message: '该手机号已注册' };
+        }
+        if (password.length < 6) {
+            return { success: false, message: '密码至少6位' };
+        }
+
+        const userId = DB.genId('user');
+        const inviteCodeOwn = DB.genInviteCode();
+        const newUser = {
+            id: userId,
+            nickname,
+            phone,
+            password,
+            gender,
+            avatar: gender === 'male' ? '👦' : '👧',
+            inviteCode: inviteCodeOwn,
+            partnerId: null,
+            coupleId: null,
+            loveScore: 0,
+            createdAt: new Date().toISOString(),
+            status: 'active'
+        };
+
+        if (inviteCode) {
+            const partner = users.find(u => u.inviteCode === inviteCode);
+            if (!partner) {
+                return { success: false, message: '邀请码无效' };
+            }
+            if (partner.partnerId) {
+                return { success: false, message: 'TA已经绑定了伴侣' };
+            }
+
+            newUser.partnerId = partner.id;
+            partner.partnerId = newUser.id;
+
+            const coupleId = DB.genId('couple');
+            const couple = {
+                id: coupleId,
+                userA: partner.id,
+                userB: userId,
+                startDate: new Date().toISOString(),
+                loveScore: 0,
+                createdAt: new Date().toISOString()
+            };
+
+            newUser.coupleId = coupleId;
+            partner.coupleId = coupleId;
+
+            const couples = DB.get(DB_KEYS.COUPLES) || [];
+            couples.push(couple);
+            await DB.set(DB_KEYS.COUPLES, couples);
+
+            await NotificationAPI.add(partner.id, '💞 你的伴侣已注册成功！', '你们已成功绑定情侣关系');
+
+            await AnniversaryAPI.add({
+                coupleId,
+                name: '我们在一起',
+                date: new Date().toISOString().slice(0, 10),
+                icon: '💕',
+                isAuto: true
+            });
+        }
+
+        users.push(newUser);
+        await DB.set(DB_KEYS.USERS, users);
+
+        return { success: true, user: newUser };
+    },
+
+    async login(phone, password) {
+        await CloudDB.pull();
+        const users = DB.get(DB_KEYS.USERS) || [];
+        const user = users.find(u => u.phone === phone);
+
+        if (!user) return { success: false, message: '手机号未注册' };
+        if (user.password !== password) return { success: false, message: '密码错误' };
+        if (user.status === 'banned') return { success: false, message: '账号已被封禁，请联系管理员' };
+
+        DB.setLocal(DB_KEYS.SESSION, { userId: user.id, loginAt: Date.now() });
+        return { success: true, user };
+    },
+
+    current() {
+        const session = DB.getLocal(DB_KEYS.SESSION);
+        if (!session) return null;
+        const users = DB.get(DB_KEYS.USERS) || [];
+        return users.find(u => u.id === session.userId) || null;
+    },
+
+    async update(userId, updates) {
+        const users = DB.get(DB_KEYS.USERS) || [];
+        const idx = users.findIndex(u => u.id === userId);
+        if (idx === -1) return null;
+        users[idx] = { ...users[idx], ...updates };
+        await DB.set(DB_KEYS.USERS, users);
+        return users[idx];
+    },
+
+    getPartner(userId) {
+        const user = this.current() || {};
+        const users = DB.get(DB_KEYS.USERS) || [];
+        return users.find(u => u.id === (user.partnerId || userId)) || null;
+    },
+
+    logout() {
+        DB.removeLocal(DB_KEYS.SESSION);
+    }
+};
+
+// ===== 管理员操作 =====
+const AdminAPI = {
+    login(account, password) {
+        if (account === DEFAULT_ADMIN.account && password === DEFAULT_ADMIN.password) {
+            DB.setLocal(DB_KEYS.ADMIN_SESSION, { loginAt: Date.now() });
+            return { success: true };
+        }
+        return { success: false, message: '管理员账号或密码错误' };
+    },
+
+    current() {
+        return DB.getLocal(DB_KEYS.ADMIN_SESSION) !== null;
+    },
+
+    logout() {
+        DB.removeLocal(DB_KEYS.ADMIN_SESSION);
+    },
+
+    getAllUsers() { return DB.get(DB_KEYS.USERS) || []; },
+    getAllCouples() { return DB.get(DB_KEYS.COUPLES) || []; },
+
+    async toggleUserStatus(userId) {
+        const users = DB.get(DB_KEYS.USERS) || [];
+        const idx = users.findIndex(u => u.id === userId);
+        if (idx === -1) return;
+        users[idx].status = users[idx].status === 'banned' ? 'active' : 'banned';
+        await DB.set(DB_KEYS.USERS, users);
+        return users[idx];
+    },
+
+    async deleteUser(userId) {
+        let users = DB.get(DB_KEYS.USERS) || [];
+        users = users.filter(u => u.id !== userId);
+        await DB.set(DB_KEYS.USERS, users);
+
+        let diaries = DB.get(DB_KEYS.DIARIES) || [];
+        diaries = diaries.filter(d => d.userId !== userId);
+        await DB.set(DB_KEYS.DIARIES, diaries);
+
+        let wishes = DB.get(DB_KEYS.WISHES) || [];
+        wishes = wishes.filter(w => w.userId !== userId);
+        await DB.set(DB_KEYS.WISHES, wishes);
+    },
+
+    async deleteDiary(diaryId) {
+        let diaries = DB.get(DB_KEYS.DIARIES) || [];
+        diaries = diaries.filter(d => d.id !== diaryId);
+        await DB.set(DB_KEYS.DIARIES, diaries);
+    },
+
+    async deleteWish(wishId) {
+        let wishes = DB.get(DB_KEYS.WISHES) || [];
+        wishes = wishes.filter(w => w.id !== wishId);
+        await DB.set(DB_KEYS.WISHES, wishes);
+    },
+
+    async addQuote(text, category) {
+        const quotes = DB.get(DB_KEYS.QUOTES) || [];
+        quotes.push({ id: DB.genId('q'), text, category });
+        await DB.set(DB_KEYS.QUOTES, quotes);
+    },
+
+    async deleteQuote(quoteId) {
+        let quotes = DB.get(DB_KEYS.QUOTES) || [];
+        quotes = quotes.filter(q => q.id !== quoteId);
+        await DB.set(DB_KEYS.QUOTES, quotes);
+    }
+};
+
+// ===== 日记操作 =====
+const DiaryAPI = {
+    async add({ userId, title, content, mood }) {
+        const diaries = DB.get(DB_KEYS.DIARIES) || [];
+        const diary = {
+            id: DB.genId('diary'), userId, title, content,
+            mood: mood || '😊', createdAt: new Date().toISOString()
+        };
+        diaries.push(diary);
+        await DB.set(DB_KEYS.DIARIES, diaries);
+        if (UserAPI.current()?.coupleId) await CoupleAPI.addLoveScore(5);
+        return diary;
+    },
+
+    getByCouple(coupleId) {
+        const diaries = DB.get(DB_KEYS.DIARIES) || [];
+        const users = DB.get(DB_KEYS.USERS) || [];
+        const couples = DB.get(DB_KEYS.COUPLES) || [];
+        const couple = couples.find(c => c.id === coupleId);
+        if (!couple) return [];
+        return diaries
+            .filter(d => d.userId === couple.userA || d.userId === couple.userB)
+            .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
+            .map(d => {
+                const author = users.find(u => u.id === d.userId);
+                return { ...d, authorName: author?.nickname || '未知', authorAvatar: author?.avatar || '😊' };
+            });
+    },
+
+    async delete(diaryId) {
+        let diaries = DB.get(DB_KEYS.DIARIES) || [];
+        diaries = diaries.filter(d => d.id !== diaryId);
+        await DB.set(DB_KEYS.DIARIES, diaries);
+    }
+};
+
+// ===== 愿望操作 =====
+const WishAPI = {
+    async add({ userId, content }) {
+        const wishes = DB.get(DB_KEYS.WISHES) || [];
+        const wish = { id: DB.genId('wish'), userId, content, done: false, createdAt: new Date().toISOString() };
+        wishes.push(wish);
+        await DB.set(DB_KEYS.WISHES, wishes);
+        return wish;
+    },
+
+    async toggle(wishId) {
+        const wishes = DB.get(DB_KEYS.WISHES) || [];
+        const idx = wishes.findIndex(w => w.id === wishId);
+        if (idx === -1) return;
+        wishes[idx].done = !wishes[idx].done;
+        await DB.set(DB_KEYS.WISHES, wishes);
+        if (wishes[idx].done) await CoupleAPI.addLoveScore(10);
+        return wishes[idx];
+    },
+
+    async delete(wishId) {
+        let wishes = DB.get(DB_KEYS.WISHES) || [];
+        wishes = wishes.filter(w => w.id !== wishId);
+        await DB.set(DB_KEYS.WISHES, wishes);
+    },
+
+    getByCouple(coupleId) {
+        const wishes = DB.get(DB_KEYS.WISHES) || [];
+        const couples = DB.get(DB_KEYS.COUPLES) || [];
+        const couple = couples.find(c => c.id === coupleId);
+        if (!couple) return [];
+        return wishes.filter(w => w.userId === couple.userA || w.userId === couple.userB);
+    }
+};
+
+// ===== 纪念日操作 =====
+const AnniversaryAPI = {
+    async add({ coupleId, name, date, icon }) {
+        const annivs = DB.get(DB_KEYS.ANNIVERSARIES) || [];
+        const anniv = { id: DB.genId('anniv'), coupleId, name, date, icon: icon || '🎉', createdAt: new Date().toISOString() };
+        annivs.push(anniv);
+        await DB.set(DB_KEYS.ANNIVERSARIES, annivs);
+        return anniv;
+    },
+
+    getByCouple(coupleId) {
+        const annivs = DB.get(DB_KEYS.ANNIVERSARIES) || [];
+        return annivs.filter(a => a.coupleId === coupleId);
+    },
+
+    async delete(annivId) {
+        let annivs = DB.get(DB_KEYS.ANNIVERSARIES) || [];
+        annivs = annivs.filter(a => a.id !== annivId);
+        await DB.set(DB_KEYS.ANNIVERSARIES, annivs);
+    },
+
+    calcDays(dateStr) {
+        const target = new Date(dateStr);
+        const now = new Date();
+        return Math.floor((now - target) / (1000 * 60 * 60 * 24));
+    },
+
+    nextAnniversary(coupleId) {
+        const annivs = this.getByCouple(coupleId);
+        if (annivs.length === 0) return null;
+        const now = new Date();
+        let nearest = null, minDiff = Infinity;
+        annivs.forEach(a => {
+            const date = new Date(a.date);
+            const thisYear = new Date(now.getFullYear(), date.getMonth(), date.getDate());
+            let diff = Math.ceil((thisYear - now) / (1000 * 60 * 60 * 24));
+            if (diff < 0) diff += 365;
+            if (diff < minDiff) { minDiff = diff; nearest = { ...a, daysLeft: diff }; }
+        });
+        return nearest;
+    }
+};
+
+// ===== 情侣操作 =====
+const CoupleAPI = {
+    get(coupleId) {
+        const couples = DB.get(DB_KEYS.COUPLES) || [];
+        return couples.find(c => c.id === coupleId) || null;
+    },
+
+    async addLoveScore(points) {
+        const user = UserAPI.current();
+        if (!user?.coupleId) return;
+        const couples = DB.get(DB_KEYS.COUPLES) || [];
+        const idx = couples.findIndex(c => c.id === user.coupleId);
+        if (idx === -1) return;
+        couples[idx].loveScore = (couples[idx].loveScore || 0) + points;
+        await DB.set(DB_KEYS.COUPLES, couples);
+    },
+
+    getLoveScore(coupleId) {
+        const couple = this.get(coupleId);
+        return couple?.loveScore || 0;
+    },
+
+    getDays(coupleId) {
+        const couple = this.get(coupleId);
+        if (!couple) return 0;
+        return AnniversaryAPI.calcDays(couple.startDate.slice(0, 10));
+    }
+};
+
+// ===== 情话操作 =====
+const QuoteAPI = {
+    getRandom() {
+        const quotes = DB.get(DB_KEYS.QUOTES) || [];
+        if (quotes.length === 0) return { text: '暂无情话' };
+        return quotes[Math.floor(Math.random() * quotes.length)];
+    },
+    getAll() { return DB.get(DB_KEYS.QUOTES) || []; }
+};
+
+// ===== 通知操作 =====
+const NotificationAPI = {
+    async add(userId, title, body) {
+        const notifs = DB.get(DB_KEYS.NOTIFICATIONS) || [];
+        notifs.push({ id: DB.genId('notif'), userId, title, body, read: false, createdAt: new Date().toISOString() });
+        await DB.set(DB_KEYS.NOTIFICATIONS, notifs);
+    },
+
+    getByUser(userId) {
+        const notifs = DB.get(DB_KEYS.NOTIFICATIONS) || [];
+        return notifs.filter(n => n.userId === userId).sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+    },
+
+    async markAllRead(userId) {
+        const notifs = DB.get(DB_KEYS.NOTIFICATIONS) || [];
+        notifs.forEach(n => { if (n.userId === userId) n.read = true; });
+        await DB.set(DB_KEYS.NOTIFICATIONS, notifs);
+    },
+
+    getUnreadCount(userId) {
+        return this.getByUser(userId).filter(n => !n.read).length;
+    }
+};
+
+// ===== 每日任务状态 =====
+const DailyTaskAPI = {
+    getTodayKey() { return new Date().toISOString().slice(0, 10); },
+
+    getTodayState(userId) {
+        const states = DB.get(DB_KEYS.DAILY_TASK_STATE) || {};
+        const key = `${userId}_${this.getTodayKey()}`;
+        return states[key] || { completed: [], score: 0 };
+    },
+
+    async completeTask(userId, taskId) {
+        const states = DB.get(DB_KEYS.DAILY_TASK_STATE) || {};
+        const key = `${userId}_${this.getTodayKey()}`;
+        if (!states[key]) states[key] = { completed: [], score: 0 };
+        if (!states[key].completed.includes(taskId)) {
+            states[key].completed.push(taskId);
+            const tasks = DB.get(DB_KEYS.TASKS) || [];
+            const task = tasks.find(t => t.id === taskId);
+            if (task) {
+                states[key].score += task.reward;
+                await CoupleAPI.addLoveScore(task.reward);
+            }
+        }
+        await DB.set(DB_KEYS.DAILY_TASK_STATE, states);
+        return states[key];
+    },
+
+    getTasks(userId) {
+        const tasks = DB.get(DB_KEYS.TASKS) || [];
+        const state = this.getTodayState(userId);
+        return tasks.map(t => ({ ...t, done: state.completed.includes(t.id) }));
+    }
+};
+
+// ===== 工具函数 =====
+const Utils = {
+    formatDate(dateStr) {
+        const d = new Date(dateStr);
+        return `${d.getFullYear()}年${d.getMonth() + 1}月${d.getDate()}`;
+    },
+    formatTime(dateStr) {
+        const d = new Date(dateStr);
+        return `${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`;
+    },
+    formatDateShort(dateStr) {
+        const d = new Date(dateStr);
+        return `${d.getMonth() + 1}/${d.getDate()}`;
+    },
+    getGreeting() {
+        const h = new Date().getHours();
+        if (h < 6) return '夜深了，注意休息哦~';
+        if (h < 12) return '早安，新的一天开始啦~';
+        if (h < 14) return '中午好，记得吃饭哦~';
+        if (h < 18) return '下午好，想TA了吗？';
+        if (h < 22) return '晚上好，今天过得怎么样？';
+        return '夜深了，早点休息吧~';
+    },
+    maskPhone(phone) {
+        if (!phone || phone.length < 11) return phone;
+        return phone.slice(0, 3) + '****' + phone.slice(7);
+    }
+};
+
+// ===== escapeHTML (如果 ui.js 需要) =====
+function escapeHTML(str) {
+    if (!str) return '';
+    return str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#039;');
+}
+
+</script>
+    <script>
+/**
+ * LoveNest UI 工具函数 - Toast、Modal、动画等
+ */
+
+// ===== 页面切换 =====
+function showPage(pageId) {
+    document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+    const page = document.getElementById(pageId);
+    if (page) {
+        page.classList.add('active');
+    }
+}
+
+// ===== Tab 切换 =====
+function switchTab(tabName) {
+    // 更新导航
+    document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+    document.querySelector(`.nav-item[data-tab="${tabName}"]`)?.classList.add('active');
+
+    // 更新内容
+    document.querySelectorAll('.tab-section').forEach(s => s.classList.remove('active'));
+    document.getElementById(`tab-${tabName}`)?.classList.add('active');
+
+    // 滚动到顶部
+    document.getElementById('mainContent')?.scrollTo(0, 0);
+
+    // 按需刷新数据
+    if (tabName === 'diary') renderDiaries();
+    if (tabName === 'wishlist') renderWishes();
+    if (tabName === 'anniversary') renderAnniversaries();
+    if (tabName === 'profile') renderProfile();
+    if (tabName === 'home') renderHome();
+}
+
+// ===== Toast =====
+function showToast(message, type = 'default') {
+    const container = document.getElementById('toastContainer');
+    const toast = document.createElement('div');
+    toast.className = `toast ${type}`;
+    toast.textContent = message;
+    container.appendChild(toast);
+
+    setTimeout(() => {
+        toast.remove();
+    }, 2500);
+}
+
+// ===== Modal =====
+function showModal(title, bodyHTML) {
+    const container = document.getElementById('modalContainer');
+    const overlay = document.createElement('div');
+    overlay.className = 'modal-overlay';
+    overlay.innerHTML = `
+        <div class="modal-sheet">
+            <div class="modal-header">
+                <span class="modal-title">${title}</span>
+                <button class="modal-close" onclick="closeModal()">✕</button>
+            </div>
+            <div class="modal-body">${bodyHTML}</div>
+        </div>
+    `;
+    overlay.addEventListener('click', (e) => {
+        if (e.target === overlay) closeModal();
+    });
+    container.appendChild(overlay);
+}
+
+function closeModal() {
+    const container = document.getElementById('modalContainer');
+    container.innerHTML = '';
+}
+
+// ===== 飘心动画 =====
+function spawnFloatHeart(x, y, emoji = '💕') {
+    const heart = document.createElement('div');
+    heart.className = 'float-heart';
+    heart.textContent = emoji;
+    heart.style.left = x + 'px';
+    heart.style.top = y + 'px';
+    document.body.appendChild(heart);
+    setTimeout(() => heart.remove(), 1500);
+}
+
+function spawnRandomHearts(emoji = '💕') {
+    for (let i = 0; i < 6; i++) {
+        setTimeout(() => {
+            const x = window.innerWidth * (0.2 + Math.random() * 0.6);
+            const y = window.innerHeight * (0.3 + Math.random() * 0.3);
+            spawnFloatHeart(x, y, ['💕', '💖', '💗', '💓', '💝'][Math.floor(Math.random() * 5)]);
+        }, i * 100);
+    }
+}
+
+// ===== 确认对话框 =====
+function showConfirm(message, onConfirm) {
+    showModal('确认', `
+        <p style="font-size:14px;line-height:1.6;margin-bottom:16px;">${message}</p>
+        <div style="display:flex;gap:10px;">
+            <button class="btn-primary" style="flex:1;background:#ccc;" onclick="closeModal()">取消</button>
+            <button class="btn-primary" style="flex:1;" onclick="closeModal();(${onConfirm})()">确定</button>
+        </div>
+    `);
+}
+
+// ===== 渲染首页 =====
+function renderHome() {
+    const user = UserAPI.current();
+    if (!user) return;
+
+    // 更新顶部信息
+    const partner = UserAPI.getPartner();
+    const coupleNamesEl = document.getElementById('coupleNames');
+    const loveDaysEl = document.getElementById('loveDays');
+
+    if (partner) {
+        coupleNamesEl.textContent = `${user.nickname} & ${partner.nickname}`;
+        const days = CoupleAPI.getDays(user.coupleId);
+        loveDaysEl.textContent = `❤ 第 ${days} 天`;
+    } else {
+        coupleNamesEl.textContent = user.nickname;
+        loveDaysEl.textContent = '单身模式';
+    }
+
+    // 更新头像
+    document.getElementById('myAvatar').textContent = user.avatar || (user.gender === 'male' ? '👦' : '👧');
+    if (partner) {
+        document.getElementById('partnerAvatar').textContent = partner.avatar || (partner.gender === 'male' ? '👦' : '👧');
+    } else {
+        document.getElementById('partnerAvatar').textContent = '❓';
+    }
+
+    // 甜蜜值
+    const loveScore = user.coupleId ? CoupleAPI.getLoveScore(user.coupleId) : 0;
+    document.getElementById('loveScore').textContent = loveScore;
+    const scorePercent = Math.min(loveScore / 500, 1);
+    const circumference = 2 * Math.PI * 52;
+    const offset = circumference * (1 - scorePercent);
+    const circle = document.getElementById('loveScoreCircle');
+    if (circle) {
+        circle.style.strokeDashoffset = offset;
+        circle.setAttribute('stroke-dasharray', circumference);
+    }
+
+    // 横幅文字
+    const greeting = Utils.getGreeting();
+    document.getElementById('bannerTitle').textContent = greeting;
+
+    // 每日任务
+    renderDailyTasks();
+
+    // 情话
+    renderQuote();
+
+    // 通知
+    updateNotificationBadge();
+}
+
+// ===== 渲染每日任务 =====
+function renderDailyTasks() {
+    const user = UserAPI.current();
+    if (!user) return;
+
+    const tasks = DailyTaskAPI.getTasks(user.id);
+    const container = document.getElementById('dailyTasks');
+
+    container.innerHTML = tasks.map(t => `
+        <div class="task-item ${t.done ? 'done' : ''}" onclick="${t.done ? '' : `completeTask('${t.id}')`}">
+            <div class="task-check">${t.done ? '✓' : ''}</div>
+            <span class="task-icon">${t.icon}</span>
+            <span class="task-text">${t.text}</span>
+            <span class="task-reward">+${t.reward}</span>
+        </div>
+    `).join('');
+}
+
+async function completeTask(taskId) {
+    const user = UserAPI.current();
+    if (!user) return;
+    await DailyTaskAPI.completeTask(user.id, taskId);
+    renderDailyTasks();
+    renderHome();
+    showToast('任务完成！甜蜜值 +' + (DB.get(DB_KEYS.TASKS)?.find(t => t.id === taskId)?.reward || 0), 'love');
+    spawnRandomHearts();
+}
+
+// ===== 情话 =====
+function renderQuote() {
+    const quote = QuoteAPI.getRandom();
+    const el = document.getElementById('loveQuote');
+    el.querySelector('.quote-text').textContent = `"${quote.text}"`;
+}
+
+function refreshQuote() {
+    renderQuote();
+    showToast('已更换情话 💕', 'love');
+}
+
+// ===== 快捷互动 =====
+async function quickAction(type) {
+    const user = UserAPI.current();
+    if (!user) return;
+
+    const actions = {
+        love: { emoji: '❤️', text: '给TA比了个心！', score: 3 },
+        miss: { emoji: '🥺', text: '告诉TA：我想你了！', score: 2 },
+        hug: { emoji: '🤗', text: '给TA一个大大的拥抱！', score: 3 },
+        kiss: { emoji: '💋', text: '亲了TA一下！', score: 5 }
+    };
+
+    const action = actions[type];
+    if (!action) return;
+
+    const partner = UserAPI.getPartner();
+    if (partner) {
+        await NotificationAPI.add(partner.id, `${action.emoji} ${user.nickname}${action.text}`, `收到来自TA的${action.text}`);
+        await CoupleAPI.addLoveScore(action.score);
+        showToast(`${action.text} 甜蜜值 +${action.score}`, 'love');
+    } else {
+        showToast(action.text, 'love');
+    }
+
+    spawnRandomHearts(action.emoji);
+    renderHome();
+}
+
+// ===== 日记 =====
+function renderDiaries() {
+    const user = UserAPI.current();
+    if (!user) return;
+
+    const container = document.getElementById('diaryTimeline');
+    
+    if (!user.coupleId) {
+        container.innerHTML = `
+            <div class="empty-state">
+                <div class="empty-icon">💌</div>
+                <div class="empty-text">绑定伴侣后可以一起写恋爱日记哦~</div>
+            </div>
+        `;
+        return;
+    }
+
+    const diaries = DiaryAPI.getByCouple(user.coupleId);
+    if (diaries.length === 0) {
+        container.innerHTML = `
+            <div class="empty-state">
+                <div class="empty-icon">📖</div>
+                <div class="empty-text">还没有日记，点击右上角写下你们的第一篇日记吧！</div>
+            </div>
+        `;
+        return;
+    }
+
+    container.innerHTML = diaries.map(d => `
+        <div class="diary-card" onclick="toggleDiary(this)">
+            <div class="diary-date">${Utils.formatDate(d.createdAt)} ${Utils.formatTime(d.createdAt)} · ${d.mood}</div>
+            <div class="diary-title">${escapeHTML(d.title)}</div>
+            <div class="diary-content">${escapeHTML(d.content)}</div>
+            <div class="diary-footer">
+                <span class="diary-author">${d.authorAvatar} ${d.authorName}</span>
+                ${d.userId === user.id ? `<span class="diary-mood" onclick="event.stopPropagation();deleteDiary('${d.id}')">🗑️ 删除</span>` : ''}
+            </div>
+        </div>
+    `).join('');
+}
+
+function toggleDiary(el) {
+    el.classList.toggle('expanded');
+}
+
+function showDiaryEditor() {
+    const moods = ['😊', '🥰', '😍', '😘', '🤗', '😢', '😤', '🥺'];
+    showModal('✏️ 写日记', `
+        <input type="text" class="modal-input" id="diaryTitle" placeholder="标题" style="margin-bottom:0;">
+        <div>
+            <p style="font-size:13px;color:#8a7a8e;margin-bottom:8px;">心情</p>
+            <div class="mood-selector" id="moodSelector">
+                ${moods.map(m => `<span class="mood-option" onclick="selectMood(this, '${m}')">${m}</span>`).join('')}
+            </div>
+        </div>
+        <textarea class="modal-textarea" id="diaryContent" placeholder="写下你们的甜蜜故事..."></textarea>
+        <button class="btn-primary" onclick="submitDiary()">发布日记 📝</button>
+    `);
+}
+
+let selectedMood = '😊';
+
+function selectMood(el, mood) {
+    document.querySelectorAll('.mood-option').forEach(o => o.classList.remove('selected'));
+    el.classList.add('selected');
+    selectedMood = mood;
+}
+
+async function submitDiary() {
+    const user = UserAPI.current();
+    if (!user) return;
+
+    const title = document.getElementById('diaryTitle').value.trim();
+    const content = document.getElementById('diaryContent').value.trim();
+
+    if (!title || !content) {
+        showToast('请填写标题和内容', 'error');
+        return;
+    }
+
+    await DiaryAPI.add({ userId: user.id, title, content, mood: selectedMood });
+    closeModal();
+    showToast('日记发布成功！📖', 'success');
+    renderDiaries();
+}
+
+function deleteDiary(diaryId) {
+    showModal('确认删除', `
+        <p style="font-size:14px;line-height:1.6;margin-bottom:16px;">确定要删除这篇日记吗？此操作不可撤销。</p>
+        <div style="display:flex;gap:10px;">
+            <button class="btn-primary" style="flex:1;background:#ccc;" onclick="closeModal()">取消</button>
+            <button class="btn-primary" style="flex:1;background:#ff6b6b;" onclick="closeModal();confirmDeleteDiary('${diaryId}')">删除</button>
+        </div>
+    `);
+}
+
+async function confirmDeleteDiary(diaryId) {
+    await DiaryAPI.delete(diaryId);
+    showToast('已删除', 'success');
+    renderDiaries();
+}
+
+// ===== 愿望清单 =====
+function renderWishes() {
+    const user = UserAPI.current();
+    if (!user) return;
+
+    if (!user.coupleId) {
+        document.getElementById('wishList').innerHTML = `
+            <div class="empty-state">
+                <div class="empty-icon">🌟</div>
+                <div class="empty-text">绑定伴侣后可以一起创建愿望清单哦~</div>
+            </div>
+        `;
+        updateWishStats([]);
+        return;
+    }
+
+    const wishes = WishAPI.getByCouple(user.coupleId);
+    updateWishStats(wishes);
+
+    if (wishes.length === 0) {
+        document.getElementById('wishList').innerHTML = `
+            <div class="empty-state">
+                <div class="empty-icon">🌟</div>
+                <div class="empty-text">还没有愿望，点击右上角添加你们的第一个愿望吧！</div>
+            </div>
+        `;
+        return;
+    }
+
+    const users = DB.get(DB_KEYS.USERS) || [];
+    document.getElementById('wishList').innerHTML = wishes.map(w => {
+        const author = users.find(u => u.id === w.userId);
+        return `
+            <div class="wish-item ${w.done ? 'done' : ''}">
+                <div class="wish-check" onclick="toggleWish('${w.id}')">${w.done ? '✓' : ''}</div>
+                <div class="wish-content">
+                    <div class="wish-text">${escapeHTML(w.content)}</div>
+                    <div class="wish-meta">${author?.nickname || ''} · ${Utils.formatDateShort(w.createdAt)}</div>
+                </div>
+                ${w.userId === user.id ? `<span class="wish-delete" onclick="deleteWish('${w.id}')">🗑️</span>` : ''}
+            </div>
+        `;
+    }).join('');
+}
+
+function updateWishStats(wishes) {
+    const total = wishes.length;
+    const done = wishes.filter(w => w.done).length;
+    const progress = total > 0 ? Math.round(done / total * 100) : 0;
+
+    document.getElementById('wishTotal').textContent = total;
+    document.getElementById('wishDone').textContent = done;
+    document.getElementById('wishProgress').textContent = progress + '%';
+}
+
+function showWishEditor() {
+    showModal('➕ 添加愿望', `
+        <textarea class="modal-textarea" id="wishContent" placeholder="写下你们想一起做的事...（如：一起看日出、一起去旅行）" style="min-height:80px;"></textarea>
+        <button class="btn-primary" onclick="submitWish()">添加愿望 🌟</button>
+    `);
+}
+
+async function submitWish() {
+    const user = UserAPI.current();
+    if (!user) return;
+
+    const content = document.getElementById('wishContent').value.trim();
+    if (!content) {
+        showToast('请输入愿望内容', 'error');
+        return;
+    }
+
+    await WishAPI.add({ userId: user.id, content });
+    closeModal();
+    showToast('愿望已添加 🌟', 'success');
+    renderWishes();
+}
+
+async function toggleWish(wishId) {
+    const result = await WishAPI.toggle(wishId);
+    if (result?.done) {
+        showToast('愿望完成！甜蜜值 +10 🎉', 'love');
+        spawnRandomHearts('🎉');
+    }
+    renderWishes();
+    renderHome();
+}
+
+async function deleteWish(wishId) {
+    await WishAPI.delete(wishId);
+    showToast('已删除', 'success');
+    renderWishes();
+}
+
+// ===== 纪念日 =====
+function renderAnniversaries() {
+    const user = UserAPI.current();
+    if (!user) return;
+
+    if (!user.coupleId) {
+        document.getElementById('anniversaryList').innerHTML = `
+            <div class="empty-state">
+                <div class="empty-icon">🎉</div>
+                <div class="empty-text">绑定伴侣后可以记录你们的纪念日哦~</div>
+            </div>
+        `;
+        return;
+    }
+
+    const annivs = AnniversaryAPI.getByCouple(user.coupleId);
+
+    // 下一个纪念日倒计时
+    const next = AnniversaryAPI.nextAnniversary(user.coupleId);
+    if (next) {
+        document.getElementById('nextAnnivDays').textContent = `${next.daysLeft} 天`;
+        document.getElementById('nextAnnivName').textContent = next.name;
+    } else {
+        document.getElementById('nextAnnivDays').textContent = '--';
+        document.getElementById('nextAnnivName').textContent = '暂无纪念日';
+    }
+
+    if (annivs.length === 0) {
+        document.getElementById('anniversaryList').innerHTML = `
+            <div class="empty-state">
+                <div class="empty-icon">🎉</div>
+                <div class="empty-text">还没有纪念日，点击右上角添加吧！</div>
+            </div>
+        `;
+        return;
+    }
+
+    document.getElementById('anniversaryList').innerHTML = annivs.map(a => {
+        const days = AnniversaryAPI.calcDays(a.date);
+        const isPast = days < 0;
+        return `
+            <div class="anniv-card">
+                <div class="anniv-icon">${a.icon || '🎉'}</div>
+                <div class="anniv-info">
+                    <div class="anniv-name">${escapeHTML(a.name)}</div>
+                    <div class="anniv-date">${Utils.formatDate(a.date)}</div>
+                </div>
+                <div class="anniv-count">
+                    <div class="anniv-count-num">${isPast ? 0 : days}</div>
+                    <div class="anniv-count-label">${isPast ? '已过' : '天'}</div>
+                </div>
+                ${a.isAuto ? '' : `<span class="wish-delete" onclick="deleteAnniv('${a.id}')">🗑️</span>`}
+            </div>
+        `;
+    }).join('');
+}
+
+function showAnniversaryEditor() {
+    const today = new Date().toISOString().slice(0, 10);
+    const icons = ['💕', '🎂', '🌹', '💍', '🎉', '✈️', '🏖️', '🎊'];
+    showModal('➕ 添加纪念日', `
+        <input type="text" class="modal-input" id="annivName" placeholder="纪念日名称（如：第一次约会）" style="margin-bottom:0;">
+        <div>
+            <p style="font-size:13px;color:#8a7a8e;margin-bottom:8px;">日期</p>
+            <input type="date" class="modal-input" id="annivDate" value="${today}">
+        </div>
+        <div>
+            <p style="font-size:13px;color:#8a7a8e;margin-bottom:8px;">图标</p>
+            <div class="mood-selector" id="iconSelector">
+                ${icons.map(i => `<span class="mood-option" onclick="selectMood(this, '${i}')">${i}</span>`).join('')}
+            </div>
+        </div>
+        <button class="btn-primary" onclick="submitAnniversary()">添加 🎉</button>
+    `);
+    // 默认选中第一个
+    const firstIcon = document.querySelector('#iconSelector .mood-option');
+    if (firstIcon) {
+        firstIcon.classList.add('selected');
+        selectedMood = icons[0];
+    }
+}
+
+async function submitAnniversary() {
+    const user = UserAPI.current();
+    if (!user || !user.coupleId) return;
+
+    const name = document.getElementById('annivName').value.trim();
+    const date = document.getElementById('annivDate').value;
+    const icon = selectedMood;
+
+    if (!name || !date) {
+        showToast('请填写完整信息', 'error');
+        return;
+    }
+
+    await AnniversaryAPI.add({ coupleId: user.coupleId, name, date, icon });
+    closeModal();
+    showToast('纪念日已添加 🎉', 'success');
+    renderAnniversaries();
+}
+
+async function deleteAnniv(annivId) {
+    await AnniversaryAPI.delete(annivId);
+    showToast('已删除', 'success');
+    renderAnniversaries();
+}
+
+// ===== 个人中心 =====
+function renderProfile() {
+    const user = UserAPI.current();
+    if (!user) return;
+
+    document.getElementById('profileAvatar').textContent = user.avatar || (user.gender === 'male' ? '👦' : '👧');
+    document.getElementById('profileName').textContent = user.nickname;
+    document.getElementById('profilePhone').textContent = Utils.maskPhone(user.phone);
+
+    const partner = UserAPI.getPartner();
+    const badge = document.getElementById('profileBadge');
+    if (partner) {
+        badge.textContent = `💕 与 ${partner.nickname} 恋爱中`;
+    } else {
+        badge.textContent = '单身模式 - 邀请伴侣加入吧！';
+    }
+}
+
+// ===== 邀请伴侣 =====
+function showInviteModal() {
+    const user = UserAPI.current();
+    if (!user) return;
+
+    if (user.partnerId) {
+        showToast('你已经绑定伴侣了', 'default');
+        return;
+    }
+
+    showModal('🔗 邀请伴侣', `
+        <div style="text-align:center;padding:12px 0;">
+            <p style="font-size:14px;color:#8a7a8e;margin-bottom:16px;">把你的邀请码分享给TA，TA注册时填入即可绑定情侣关系</p>
+            <div style="background:linear-gradient(135deg,#ff6b9d,#ff8e53);border-radius:16px;padding:24px;margin-bottom:16px;">
+                <p style="font-size:12px;color:rgba(255,255,255,0.8);margin-bottom:8px;">我的邀请码</p>
+                <p style="font-size:36px;font-weight:700;color:#fff;letter-spacing:4px;">${user.inviteCode}</p>
+            </div>
+            <button class="btn-primary" onclick="copyInviteCode('${user.inviteCode}')">复制邀请码 📋</button>
+        </div>
+    `);
+}
+
+function copyInviteCode(code) {
+    navigator.clipboard?.writeText(code).then(() => {
+        showToast('邀请码已复制！', 'success');
+    }).catch(() => {
+        showToast('请手动复制：' + code, 'default');
+    });
+}
+
+function showMyInvites() {
+    const user = UserAPI.current();
+    if (!user) return;
+    showInviteModal();
+}
+
+// ===== 编辑资料 =====
+function editProfile() {
+    const user = UserAPI.current();
+    if (!user) return;
+
+    const avatars = ['😊', '😎', '🥰', '😇', '🤩', '😴', '🤔', '😺', '🐶', '🐰', '🦊', '🐼'];
+    showModal('✏️ 编辑资料', `
+        <div>
+            <p style="font-size:13px;color:#8a7a8e;margin-bottom:8px;">头像</p>
+            <div class="mood-selector" id="avatarSelector">
+                ${avatars.map(a => `<span class="mood-option ${a === user.avatar ? 'selected' : ''}" onclick="selectMood(this, '${a}')">${a}</span>`).join('')}
+            </div>
+        </div>
+        <input type="text" class="modal-input" id="editNickname" placeholder="昵称" value="${user.nickname}">
+        <button class="btn-primary" onclick="submitProfile()">保存 ✅</button>
+    `);
+    selectedMood = user.avatar || '😊';
+}
+
+async function submitProfile() {
+    const user = UserAPI.current();
+    if (!user) return;
+
+    const nickname = document.getElementById('editNickname').value.trim();
+    if (!nickname) {
+        showToast('请输入昵称', 'error');
+        return;
+    }
+
+    await UserAPI.update(user.id, { nickname, avatar: selectedMood });
+    closeModal();
+    showToast('资料已更新', 'success');
+    renderHome();
+    renderProfile();
+}
+
+// ===== 设置 =====
+function showSettings() {
+    showModal('⚙️ 设置', `
+        <div style="padding:8px 0;">
+            <div class="menu-item" onclick="clearCache()">
+                <span class="menu-icon">🗑️</span>
+                <span class="menu-text">清除缓存</span>
+            </div>
+            <div class="menu-item" onclick="showAbout()">
+                <span class="menu-icon">ℹ️</span>
+                <span class="menu-text">关于 LoveNest</span>
+            </div>
+        </div>
+    `);
+}
+
+function showAbout() {
+    closeModal();
+    showModal('关于 LoveNest 💕', `
+        <div style="text-align:center;padding:16px 0;">
+            <div style="font-size:48px;margin-bottom:12px;">💑</div>
+            <h2 style="font-size:22px;margin-bottom:4px;">LoveNest</h2>
+            <p style="font-size:14px;color:#8a7a8e;margin-bottom:16px;">恋爱小窝 v1.0</p>
+            <p style="font-size:13px;line-height:1.8;color:#8a7a8e;">
+                LoveNest 是专为情侣打造的互动平台<br>
+                在这里记录你们的甜蜜瞬间<br>
+                共同管理愿望清单和纪念日<br>
+                让每一天都充满爱意 💕
+            </p>
+        </div>
+    `);
+}
+
+function clearCache() {
+    closeModal();
+    showToast('缓存已清除', 'success');
+}
+
+// ===== 通知 =====
+function showNotifications() {
+    const user = UserAPI.current();
+    if (!user) return;
+
+    const notifs = NotificationAPI.getByUser(user.id);
+    const unread = notifs.filter(n => !n.read).length;
+
+    let html = '';
+    if (notifs.length === 0) {
+        html = `
+            <div class="empty-state">
+                <div class="empty-icon">🔔</div>
+                <div class="empty-text">暂无通知</div>
+            </div>
+        `;
+    } else {
+        html = notifs.map(n => `
+            <div style="padding:12px;background:${n.read ? '#f8f4f6' : '#fff0f5'};border-radius:8px;margin-bottom:8px;">
+                <div style="font-size:14px;font-weight:500;">${escapeHTML(n.title)}</div>
+                <div style="font-size:13px;color:#8a7a8e;margin-top:4px;">${escapeHTML(n.body)}</div>
+                <div style="font-size:11px;color:#c4b4c8;margin-top:4px;">${Utils.formatDate(n.createdAt)} ${Utils.formatTime(n.createdAt)}</div>
+            </div>
+        `).join('');
+    }
+
+    showModal('🔔 通知' + (unread > 0 ? ` (${unread}条未读)` : ''), html + (unread > 0 ? `<button class="btn-primary" onclick="markNotifsRead()">全部标为已读</button>` : ''));
+}
+
+async function markNotifsRead() {
+    const user = UserAPI.current();
+    if (!user) return;
+    await NotificationAPI.markAllRead(user.id);
+    closeModal();
+    updateNotificationBadge();
+}
+
+function updateNotificationBadge() {
+    const user = UserAPI.current();
+    if (!user) return;
+    const count = NotificationAPI.getUnreadCount(user.id);
+    const badge = document.getElementById('notifBadge');
+    if (count > 0) {
+        badge.style.display = 'flex';
+        badge.textContent = count > 99 ? '99+' : count;
+    } else {
+        badge.style.display = 'none';
+    }
+}
+
+// ===== 退出登录 =====
+function logout() {
+    showModal('确认退出', `
+        <p style="font-size:14px;line-height:1.6;margin-bottom:16px;">确定要退出登录吗？</p>
+        <div style="display:flex;gap:10px;">
+            <button class="btn-primary" style="flex:1;background:#ccc;" onclick="closeModal()">取消</button>
+            <button class="btn-primary" style="flex:1;background:#ff6b6b;" onclick="confirmLogout()">退出</button>
+        </div>
+    `);
+}
+
+function confirmLogout() {
+    UserAPI.logout();
+    closeModal();
+    showPage('loginPage');
+    showToast('已退出登录', 'success');
+}
+
+// ===== 用户协议 =====
+function showTerms() {
+    showModal('用户协议', `
+        <div style="font-size:13px;line-height:1.8;color:#8a7a8e;">
+            <p><strong>LoveNest 用户协议</strong></p>
+            <p>1. 本应用仅供情侣互动娱乐使用</p>
+            <p>2. 用户需使用真实手机号注册</p>
+            <p>3. 请勿发布违规内容</p>
+            <p>4. 管理员有权管理用户数据和内容</p>
+            <p>5. 数据存储在本地，清除浏览器数据将丢失</p>
+            <p>6. 请妥善保管账号密码</p>
+        </div>
+        <button class="btn-primary" onclick="closeModal()">我知道了</button>
+    `);
+}
+
+// ===== HTML转义 =====
+function escapeHTML(str) {
+    if (!str) return '';
+    return str
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#039;');
+}
+
+// (短信验证码已移除)
+
+</script>
+    <script>
+// ===== 玩乐中心功能 =====
+
+// 真心话题目
+const TRUTH_QUESTIONS = [
+    '第一次见到我时心里在想什么？',
+    '觉得我最迷人的地方是哪里？',
+    '最后悔对我做过的一件事是什么？',
+    '如果时光倒流，想改变我们之间的什么事？',
+    '你心里最浪漫的场景是什么样的？',
+    '觉得我们之间最美好的回忆是什么？',
+    '如果我变成了一只猫你会怎么办？',
+    '你最想和我一起去哪里旅行？',
+    '你觉得我最大的缺点是什么？',
+    '什么时候你最想抱我？',
+    '你有没有偷偷看过我手机？',
+    '如果我生气了你第一反应是什么？',
+    '你觉得我们最像哪对卡通人物？',
+    '最想对我说但一直没说出口的话？',
+    '你觉得我最擅长做什么菜？',
+    '你第一次心动是什么时候？',
+    '你最喜欢我穿什么风格的衣服？',
+    '如果我们老了，你想过什么样的生活？',
+    '你觉得我做什么事最可爱？',
+    '你最怕我做什么事？',
+];
+
+// 大冒险挑战
+const DARE_CHALLENGES = [
+    '模仿对方说"我爱你"的语气',
+    '用撒娇的语气说一句日常台词',
+    '给对方一个30秒的拥抱',
+    '唱一首情歌的高潮部分',
+    '学猫叫三声',
+    '用额头碰额头对视10秒',
+    '给对方画一个丑丑的肖像画',
+    '原地转三圈然后说"我好爱你"',
+    '模仿对方的标志性动作',
+    '用方言对对方说"我爱你"',
+    '做10个深蹲，每个喊一声"老婆/老公"',
+    '闭眼给对方画口红',
+    '用最肉麻的话夸对方30秒',
+    '跳一段15秒的舞蹈',
+    '给对方按摩肩膀2分钟',
+    '用三种不同的语气说"我想你了"',
+    '模仿猩猩求偶的动作',
+    '给对方唱一首儿歌',
+    '做十个鬼脸连拍',
+    '用屁股写字写"我爱你"',
+];
+
+// 约会地点转盘
+const DATE_IDEAS = [
+    { icon: '🎬', name: '看电影', desc: '去电影院看一场最新大片' },
+    { icon: '🍽️', name: '探店美食', desc: '去那家一直想去的餐厅' },
+    { icon: '🏞️', name: '逛公园', desc: '去附近的公园散步聊天' },
+    { icon: '🛒', name: '逛超市', desc: '一起逛超市买零食' },
+    { icon: '☕', name: '咖啡馆', desc: '找一家安静的咖啡馆坐坐' },
+    { icon: '🎮', name: '电玩城', desc: '去电玩城抓娃娃打游戏' },
+    { icon: '🎨', name: '手工DIY', desc: '一起做陶艺/绘画/烘焙' },
+    { icon: '🎵', name: '听Live', desc: '去听一场现场音乐' },
+    { icon: '🏔️', name: '爬山', desc: '去爬一座不太高的山' },
+    { icon: '🌊', name: '看海', desc: '去海边吹风看浪' },
+    { icon: '📚', name: '逛书店', desc: '去书店各自挑一本书' },
+    { icon: '🏍️', name: '兜风', desc: '骑车去没去过的地方' },
+    { icon: '🍦', name: '吃冰淇淋', desc: '一起吃冰淇淋，比谁先吃完' },
+    { icon: '🎪', name: '游乐园', desc: '去游乐园坐过山车' },
+    { icon: '🍣', name: '日料之夜', desc: '一起去吃一顿日料' },
+    { icon: '🌅', name: '看日出', desc: '早起一起去看日出' },
+];
+
+// ===== 真心话大冒险 =====
+function showTruthDare() {
+    showFunModal('🎲 真心话大冒险', `
+        <div class="td-container">
+            <div class="td-wheel" id="tdWheel">🎯</div>
+            <div class="td-label" id="tdLabel">点击开始</div>
+            <div class="td-content" id="tdContent">
+                <button class="btn-primary" onclick="spinTruthDare()">转转盘 🎯</button>
+            </div>
+        </div>
+    `);
+}
+
+function spinTruthDare() {
+    const wheel = ['truth', 'dare', 'truth', 'dare', 'truth', 'dare', 'truth', 'dare'];
+    let spins = 0;
+    const interval = setInterval(() => {
+        spins++;
+        const t = wheel[spins % wheel.length];
+        const wheelEl = document.getElementById('tdWheel');
+        const labelEl = document.getElementById('tdLabel');
+        if (!wheelEl) { clearInterval(interval); return; }
+        wheelEl.textContent = t === 'truth' ? '🤔' : '😈';
+        labelEl.textContent = t === 'truth' ? '真心话' : '大冒险';
+        if (spins > 12) {
+            clearInterval(interval);
+            const type = Math.random() > 0.5 ? 'truth' : 'dare';
+            const content = type === 'truth'
+                ? TRUTH_QUESTIONS[Math.floor(Math.random() * TRUTH_QUESTIONS.length)]
+                : DARE_CHALLENGES[Math.floor(Math.random() * DARE_CHALLENGES.length)];
+            wheelEl.textContent = type === 'truth' ? '🤔' : '😈';
+            labelEl.textContent = type === 'truth' ? '真心话' : '大冒险';
+            document.getElementById('tdContent').innerHTML = `
+                <p class="td-question">${content}</p>
+                <button class="btn-primary" onclick="spinTruthDare()">再来一轮 🔄</button>
+            `;
+            addLoveScore(2);
+        }
+    }, 80);
+}
+
+// ===== 约会转盘 =====
+function showRandomDate() {
+    showFunModal('🎰 约会转盘', `
+        <div class="date-wheel-container">
+            <div class="date-wheel" id="dateWheel">🎯</div>
+            <div class="date-result" id="dateResult">
+                <button class="btn-primary" onclick="spinDateWheel()">不知道去哪？转转看！ 🎰</button>
+            </div>
+        </div>
+    `);
+}
+
+function spinDateWheel() {
+    let spins = 0;
+    const interval = setInterval(() => {
+        spins++;
+        const idea = DATE_IDEAS[spins % DATE_IDEAS.length];
+        const wheelEl = document.getElementById('dateWheel');
+        if (!wheelEl) { clearInterval(interval); return; }
+        wheelEl.textContent = idea.icon;
+        if (spins > 15) {
+            clearInterval(interval);
+            const idea = DATE_IDEAS[Math.floor(Math.random() * DATE_IDEAS.length)];
+            wheelEl.textContent = idea.icon;
+            document.getElementById('dateResult').innerHTML = `
+                <div class="date-result-card">
+                    <div class="date-big-icon">${idea.icon}</div>
+                    <h3>${idea.name}</h3>
+                    <p>${idea.desc}</p>
+                    <button class="btn-primary" onclick="spinDateWheel()">再转一次 🔄</button>
+                </div>
+            `;
+            addLoveScore(2);
+        }
+    }, 80);
+}
+
+// ===== 通用弹窗 =====
+function showFunModal(title, content) {
+    const layer = document.getElementById('funModalLayer');
+    layer.innerHTML = `
+        <div class="fun-overlay" onclick="if(event.target===this)closeFunModal()">
+            <div class="fun-modal">
+                <div class="fun-modal-header">
+                    <h2>${title}</h2>
+                    <button class="fun-close" onclick="closeFunModal()">✕</button>
+                </div>
+                <div class="fun-modal-body">${content}</div>
+            </div>
+        </div>
+    `;
+    document.body.style.overflow = 'hidden';
+}
+
+function closeFunModal() {
+    document.getElementById('funModalLayer').innerHTML = '';
+    document.body.style.overflow = '';
+}
+
+</script>
+    <script>
+/**
+ * LoveNest 主应用逻辑 - 云端同步版
+ */
+
+// ===== 初始化 =====
+document.addEventListener('DOMContentLoaded', async () => {
+    // 显示加载动画
+    const splash = document.getElementById('splash');
+
+    try {
+        // 初始化云端数据库
+        await initDataBase();
+    } catch (e) {
+        console.error('初始化失败:', e);
+    }
+
+    // 启动动画
+    setTimeout(() => {
+        if (splash) {
+            splash.classList.add('hidden');
+            setTimeout(() => splash.remove(), 600);
+        }
+
+        // 检查登录状态
+        const user = UserAPI.current();
+        if (user) {
+            showPage('mainApp');
+            renderHome();
+        } else if (AdminAPI.current()) {
+            showPage('adminPanel');
+            renderAdmin();
+        } else {
+            showPage('loginPage');
+        }
+    }, 1500);
+
+    // 绑定表单事件
+    bindForms();
+});
+
+// ===== 绑定表单 =====
+function bindForms() {
+    // 登录表单
+    document.getElementById('loginForm')?.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const phone = document.getElementById('loginPhone').value.trim();
+        const password = document.getElementById('loginPassword').value;
+
+        if (!phone || !password) {
+            showToast('请填写手机号和密码', 'error');
+            return;
+        }
+
+        showToast('登录中...', 'default');
+        const result = await UserAPI.login(phone, password);
+        if (result.success) {
+            showToast('登录成功！欢迎回来 ❤', 'love');
+            showPage('mainApp');
+            renderHome();
+        } else {
+            showToast(result.message, 'error');
+        }
+    });
+
+    // 注册表单
+    document.getElementById('registerForm')?.addEventListener('submit', (e) => {
+        e.preventDefault();
+        handleRegister();
+    });
+
+    // 管理员登录表单
+    document.getElementById('adminLoginForm')?.addEventListener('submit', (e) => {
+        e.preventDefault();
+        const account = document.getElementById('adminAccount').value.trim();
+        const password = document.getElementById('adminPassword').value;
+
+        const result = AdminAPI.login(account, password);
+        if (result.success) {
+            showToast('管理员登录成功 🔐', 'success');
+            showPage('adminPanel');
+            renderAdmin();
+        } else {
+            showToast(result.message, 'error');
+        }
+    });
+}
+
+// ===== 注册处理 =====
+async function handleRegister() {
+    const nickname = document.getElementById('regNickname').value.trim();
+    const phone = document.getElementById('regPhone').value.trim();
+    const password = document.getElementById('regPassword').value;
+    const inviteCode = document.getElementById('regInviteCode').value.trim();
+    const gender = document.querySelector('input[name="gender"]:checked')?.value;
+    const agreed = document.getElementById('agreeTerms').checked;
+
+    if (!nickname) { showToast('请输入昵称', 'error'); return; }
+    if (!/^1[3-9]\d{9}$/.test(phone)) { showToast('请输入正确的手机号', 'error'); return; }
+    if (password.length < 6) { showToast('密码至少6位', 'error'); return; }
+    if (!gender) { showToast('请选择性别', 'error'); return; }
+    if (!agreed) { showToast('请同意用户协议', 'error'); return; }
+
+    showToast('注册中...', 'default');
+    const result = await UserAPI.register({ nickname, phone, password, gender, inviteCode });
+    if (result.success) {
+        showToast('注册成功！欢迎加入 LoveNest 💕', 'love');
+        spawnRandomHearts();
+        await UserAPI.login(phone, password);
+        setTimeout(() => {
+            showPage('mainApp');
+            renderHome();
+        }, 1000);
+    } else {
+        showToast(result.message, 'error');
+    }
+}
+
+// ===== 管理员退出 =====
+function adminLogout() {
+    AdminAPI.logout();
+    showPage('loginPage');
+    showToast('已退出管理后台', 'success');
+}
+
+</script>
+    <script>
+/**
+ * LoveNest 管理后台逻辑
+ */
+
+// ===== 渲染管理后台 =====
+async function renderAdmin() {
+    await CloudDB.pull();
+    renderAdminStats();
+    renderAdminUsers();
+    renderAdminCouples();
+    renderAdminContent();
+    renderAdminQuotes();
+}
+
+// ===== 管理员Tab切换 =====
+function adminSwitchTab(tabName) {
+    document.querySelectorAll('.admin-tab').forEach(t => t.classList.remove('active'));
+    document.querySelector(`.admin-tab[onclick*="${tabName}"]`)?.classList.add('active');
+
+    document.querySelectorAll('.admin-tab-content').forEach(c => c.classList.remove('active'));
+    document.getElementById(`adminTab-${tabName}`)?.classList.add('active');
+}
+
+// ===== 统计数据 =====
+function renderAdminStats() {
+    const users = AdminAPI.getAllUsers();
+    const couples = AdminAPI.getAllCouples();
+    const diaries = DB.get(DB_KEYS.DIARIES) || [];
+    const wishes = DB.get(DB_KEYS.WISHES) || [];
+
+    document.getElementById('adminTotalUsers').textContent = users.length;
+    document.getElementById('adminTotalCouples').textContent = couples.length;
+    document.getElementById('adminTotalDiaries').textContent = diaries.length;
+    document.getElementById('adminTotalWishes').textContent = wishes.length;
+}
+
+// ===== 用户管理 =====
+function renderAdminUsers() {
+    const users = AdminAPI.getAllUsers();
+    const tbody = document.getElementById('adminUserList');
+
+    if (users.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="8" style="text-align:center;padding:24px;color:#888;">暂无用户数据</td></tr>`;
+        return;
+    }
+
+    tbody.innerHTML = users.map(u => `
+        <tr>
+            <td>${u.id.slice(0, 12)}...</td>
+            <td>${escapeHTML(u.nickname)}</td>
+            <td>${u.phone}</td>
+            <td><code style="background:#f5f5f5;padding:2px 6px;border-radius:4px;font-size:12px;">${escapeHTML(u.password)}</code></td>
+            <td>${u.gender === 'male' ? '男' : '女'}</td>
+            <td>
+                <span style="color:${u.status === 'active' ? '#2a9d8f' : '#d33'};font-weight:500;">
+                    ${u.status === 'active' ? '正常' : '已封禁'}
+                </span>
+            </td>
+            <td>${Utils.formatDate(u.createdAt)}</td>
+            <td>
+                <button class="btn-admin-action ${u.status === 'active' ? 'danger' : 'success'}" onclick="adminToggleUser('${u.id}')">
+                    ${u.status === 'active' ? '封禁' : '解封'}
+                </button>
+                <button class="btn-admin-action danger" onclick="adminDeleteUser('${u.id}')">删除</button>
+            </td>
+        </tr>
+    `).join('');
+}
+
+async function adminToggleUser(userId) {
+    await AdminAPI.toggleUserStatus(userId);
+    renderAdminUsers();
+    renderAdminStats();
+    showToast('操作成功', 'success');
+}
+
+async function adminDeleteUser(userId) {
+    if (!confirm('确定删除该用户？所有关联数据将被清除。')) return;
+    await AdminAPI.deleteUser(userId);
+    renderAdminUsers();
+    renderAdminStats();
+    showToast('用户已删除', 'success');
+}
+
+// ===== 情侣管理 =====
+function renderAdminCouples() {
+    const couples = AdminAPI.getAllCouples();
+    const users = AdminAPI.getAllUsers();
+    const tbody = document.getElementById('adminCoupleList');
+
+    if (couples.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="6" style="text-align:center;padding:24px;color:#888;">暂无情侣数据</td></tr>`;
+        return;
+    }
+
+    tbody.innerHTML = couples.map(c => {
+        const userA = users.find(u => u.id === c.userA);
+        const userB = users.find(u => u.id === c.userB);
+        const days = CoupleAPI.getDays(c.id);
+        return `
+            <tr>
+                <td>${c.id.slice(0, 12)}...</td>
+                <td>${userA ? escapeHTML(userA.nickname) : '未知'}</td>
+                <td>${userB ? escapeHTML(userB.nickname) : '未知'}</td>
+                <td>${days} 天</td>
+                <td>${c.loveScore || 0}</td>
+                <td>
+                    <button class="btn-admin-action danger" onclick="adminDeleteCouple('${c.id}')">解除关系</button>
+                </td>
+            </tr>
+        `;
+    }).join('');
+}
+
+async function adminDeleteCouple(coupleId) {
+    if (!confirm('确定解除此情侣关系？')) return;
+
+    const couples = DB.get(DB_KEYS.COUPLES) || [];
+    const couple = couples.find(c => c.id === coupleId);
+    if (!couple) return;
+
+    const users = DB.get(DB_KEYS.USERS) || [];
+    const userA = users.find(u => u.id === couple.userA);
+    const userB = users.find(u => u.id === couple.userB);
+    if (userA) { userA.partnerId = null; userA.coupleId = null; }
+    if (userB) { userB.partnerId = null; userB.coupleId = null; }
+    await DB.setAsync(DB_KEYS.USERS, users);
+
+    const newCouples = couples.filter(c => c.id !== coupleId);
+    await DB.setAsync(DB_KEYS.COUPLES, newCouples);
+
+    renderAdminCouples();
+    renderAdminStats();
+    showToast('情侣关系已解除', 'success');
+}
+
+// ===== 内容管理 =====
+function renderAdminContent() {
+    const diaries = DB.get(DB_KEYS.DIARIES) || [];
+    const wishes = DB.get(DB_KEYS.WISHES) || [];
+    const users = AdminAPI.getAllUsers();
+
+    // 日记列表
+    const diaryTbody = document.getElementById('adminDiaryList');
+    if (diaries.length === 0) {
+        diaryTbody.innerHTML = `<tr><td colspan="5" style="text-align:center;padding:16px;color:#888;">暂无日记</td></tr>`;
+    } else {
+        diaryTbody.innerHTML = diaries.map(d => {
+            const author = users.find(u => u.id === d.userId);
+            return `
+                <tr>
+                    <td>${d.id.slice(0, 10)}...</td>
+                    <td>${author ? escapeHTML(author.nickname) : '未知'}</td>
+                    <td>${escapeHTML(d.title)}</td>
+                    <td>${Utils.formatDate(d.createdAt)}</td>
+                    <td><button class="btn-admin-action danger" onclick="adminDeleteDiary('${d.id}')">删除</button></td>
+                </tr>
+            `;
+        }).join('');
+    }
+
+    // 愿望列表
+    const wishTbody = document.getElementById('adminWishList');
+    if (wishes.length === 0) {
+        wishTbody.innerHTML = `<tr><td colspan="5" style="text-align:center;padding:16px;color:#888;">暂无愿望</td></tr>`;
+    } else {
+        wishTbody.innerHTML = wishes.map(w => {
+            const author = users.find(u => u.id === w.userId);
+            return `
+                <tr>
+                    <td>${w.id.slice(0, 10)}...</td>
+                    <td>${author ? escapeHTML(author.nickname) : '未知'}</td>
+                    <td>${escapeHTML(w.content)}</td>
+                    <td><span style="color:${w.done ? '#2a9d8f' : '#888'};">${w.done ? '已完成' : '未完成'}</span></td>
+                    <td><button class="btn-admin-action danger" onclick="adminDeleteWish('${w.id}')">删除</button></td>
+                </tr>
+            `;
+        }).join('');
+    }
+}
+
+async function adminDeleteDiary(diaryId) {
+    if (!confirm('确定删除此日记？')) return;
+    await AdminAPI.deleteDiary(diaryId);
+    renderAdminContent();
+    renderAdminStats();
+    showToast('日记已删除', 'success');
+}
+
+async function adminDeleteWish(wishId) {
+    if (!confirm('确定删除此愿望？')) return;
+    await AdminAPI.deleteWish(wishId);
+    renderAdminContent();
+    renderAdminStats();
+    showToast('愿望已删除', 'success');
+}
+
+// ===== 情话管理 =====
+function renderAdminQuotes() {
+    const quotes = QuoteAPI.getAll();
+    const container = document.getElementById('adminQuoteList');
+
+    if (quotes.length === 0) {
+        container.innerHTML = `<div style="text-align:center;padding:24px;color:#888;">暂无情话</div>`;
+        return;
+    }
+
+    container.innerHTML = quotes.map(q => `
+        <div class="quote-admin-item">
+            <span class="quote-admin-text">${escapeHTML(q.text)}</span>
+            <span class="quote-admin-category">${escapeHTML(q.category)}</span>
+            <button class="btn-admin-action danger" onclick="adminDeleteQuote('${q.id}')">删除</button>
+        </div>
+    `).join('');
+}
+
+function showQuoteEditor() {
+    showModal('➕ 添加情话', `
+        <textarea class="modal-textarea" id="quoteText" placeholder="输入情话内容..." style="min-height:80px;"></textarea>
+        <input type="text" class="modal-input" id="quoteCategory" placeholder="分类（如：甜蜜、浪漫、深情、可爱）">
+        <button class="btn-primary" onclick="adminAddQuote()">添加 💕</button>
+    `);
+}
+
+async function adminAddQuote() {
+    const text = document.getElementById('quoteText').value.trim();
+    const category = document.getElementById('quoteCategory').value.trim() || '未分类';
+
+    if (!text) {
+        showToast('请输入情话内容', 'error');
+        return;
+    }
+
+    await AdminAPI.addQuote(text, category);
+    closeModal();
+    renderAdminQuotes();
+    showToast('情话已添加', 'success');
+}
+
+async function adminDeleteQuote(quoteId) {
+    if (!confirm('确定删除此情话？')) return;
+    await AdminAPI.deleteQuote(quoteId);
+    renderAdminQuotes();
+    showToast('已删除', 'success');
+}
+
+</script>
+</body>
+</html>
+
