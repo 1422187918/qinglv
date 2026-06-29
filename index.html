@@ -2336,15 +2336,22 @@ const DEFAULT_TASK_TEMPLATES = [
 let CLOUD_CACHE = {};
 let _cloudReady = false;
 
-// ===== 云端API封装（真正调用后端API）=====
+// JSONBin 配置 — 直接前端调用，无需 server.js
+const JSONBIN_API_KEY = '$2a$10$GN0OqW.mNe1Xin03BlYkiO8dJypMNtrIDhBnH10zDIdt8am1ft5Mu';
+const JSONBIN_BIN_ID = '6a41bf6fda38895dfe0d88f7';
+const JSONBIN_URL = `https://api.jsonbin.io/v3/b/${JSONBIN_BIN_ID}`;
+
+// ===== 云端API封装（直连 JSONBin）=====
 const CloudDB = {
     async init() {
-        console.log('[CloudDB] 初始化 - 从服务器拉取数据');
+        console.log('[CloudDB] 初始化 - 从 JSONBin 拉取数据');
         try {
-            const resp = await fetch('/api/data');
+            const resp = await fetch(JSONBIN_URL + '/latest', {
+                headers: { 'X-Master-Key': JSONBIN_API_KEY }
+            });
             const json = await resp.json();
-            if (json.success && json.data) {
-                CLOUD_CACHE = json.data;
+            if (json.record) {
+                CLOUD_CACHE = json.record;
                 _cloudReady = true;
                 console.log('[CloudDB] 拉取成功, keys:', Object.keys(CLOUD_CACHE));
             }
@@ -2355,11 +2362,12 @@ const CloudDB = {
 
     async pull() {
         try {
-            const resp = await fetch('/api/data');
+            const resp = await fetch(JSONBIN_URL + '/latest', {
+                headers: { 'X-Master-Key': JSONBIN_API_KEY }
+            });
             const json = await resp.json();
-            if (json.success && json.data) {
-                // 合并：服务器数据优先，但保留本地 session
-                const serverData = json.data;
+            if (json.record) {
+                const serverData = json.record;
                 const localSession = localStorage.getItem('lovenest_session');
                 const localAdmin = localStorage.getItem('lovenest_admin_session');
                 CLOUD_CACHE = serverData;
@@ -2374,31 +2382,52 @@ const CloudDB = {
 
     async push() {
         try {
-            const resp = await fetch('/api/data', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
+            const resp = await fetch(JSONBIN_URL, {
+                method: 'PUT',
+                headers: {
+                    'X-Master-Key': JSONBIN_API_KEY,
+                    'Content-Type': 'application/json'
+                },
                 body: JSON.stringify(CLOUD_CACHE)
             });
             const json = await resp.json();
-            console.log('[CloudDB] push 结果:', json.success);
-            return json.success;
+            console.log('[CloudDB] push 结果:', !!json.record);
+            return !!json.record;
         } catch (e) {
             console.error('[CloudDB] push 失败:', e.message);
             return false;
         }
     },
 
-    // 推送单个 key
+    // 推送单个 key（读-改-写）
     async pushKey(key, value) {
         CLOUD_CACHE[key] = value;
         try {
-            const resp = await fetch('/api/push', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ key, value })
+            // 先拉取最新数据，合并后写回（防止覆盖其他 key）
+            const pullResp = await fetch(JSONBIN_URL + '/latest', {
+                headers: { 'X-Master-Key': JSONBIN_API_KEY }
+            });
+            const pullJson = await pullResp.json();
+            if (pullJson.record) {
+                pullJson.record[key] = value;
+                // 保留 session 等本地数据
+                const localSession = localStorage.getItem('lovenest_session');
+                if (localSession) pullJson.record['lovenest_session'] = JSON.parse(localSession);
+            }
+            const merged = pullJson.record || CLOUD_CACHE;
+            merged[key] = value;
+            
+            const resp = await fetch(JSONBIN_URL, {
+                method: 'PUT',
+                headers: {
+                    'X-Master-Key': JSONBIN_API_KEY,
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(merged)
             });
             const json = await resp.json();
-            return json.success;
+            CLOUD_CACHE = json.record || merged;
+            return !!json.record;
         } catch (e) {
             console.error('[CloudDB] pushKey 失败:', e.message);
             return false;
@@ -2409,14 +2438,11 @@ const CloudDB = {
 // ===== 数据操作工具 =====
 const DB = {
     get(key) {
-        // 优先从内存缓存取
         if (CLOUD_CACHE[key] !== undefined && CLOUD_CACHE[key] !== null) return CLOUD_CACHE[key];
-        // 从 localStorage 取（session 等本地数据）
         try {
             const data = localStorage.getItem(key);
             if (data !== null && data !== undefined) return JSON.parse(data);
         } catch (e) {}
-        // 兜底默认值
         if (key === DB_KEYS.QUOTES) return DEFAULT_QUOTES;
         if (key === DB_KEYS.TASKS) return DEFAULT_TASK_TEMPLATES;
         if (key === DB_KEYS.USERS) return [];
@@ -2429,14 +2455,12 @@ const DB = {
         return null;
     },
 
-    // 数据写入：更新缓存 + 推送到服务器
     async set(key, value) {
         CLOUD_CACHE[key] = value;
         try { localStorage.setItem(key, JSON.stringify(value)); } catch(e) { console.warn('[DB] 本地保存失败:', e); }
         await CloudDB.pushKey(key, value);
     },
 
-    // 同步版仅用于 session 等不需要同步的数据
     setLocal(key, value) {
         try { localStorage.setItem(key, JSON.stringify(value)); } catch(e) {}
     },
@@ -2445,14 +2469,10 @@ const DB = {
         try {
             const data = localStorage.getItem(key);
             return data ? JSON.parse(data) : null;
-        } catch (e) {
-            return null;
-        }
+        } catch (e) { return null; }
     },
 
-    removeLocal(key) {
-        localStorage.removeItem(key);
-    },
+    removeLocal(key) { localStorage.removeItem(key); },
 
     genId(prefix = 'id') {
         return `${prefix}_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
@@ -2475,7 +2495,7 @@ const DB = {
 // ===== 初始化默认数据 =====
 async function initDataBase() {
     // 版本检测：旧版数据自动清理
-    const DATA_VERSION = 'v11_jsonbin_20260629';
+    const DATA_VERSION = 'v12_jsonbin_direct_20260629';
     const storedVer = localStorage.getItem('lovenest_data_version');
     if (storedVer !== DATA_VERSION) {
         console.log('[DB] 版本更新，清理旧数据:', storedVer, '->', DATA_VERSION);
