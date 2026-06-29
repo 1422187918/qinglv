@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
@@ -6,6 +6,9 @@
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="theme-color" content="#ff6b9d">
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
     <title>LoveNest · 恋爱小窝</title>
     <style>
 /* ===== LoveNest 恋爱小窝 - 全局样式 ===== */
@@ -1855,10 +1858,6 @@ html, body {
                         <div class="input-icon">🔒</div>
                         <input type="password" id="regPassword" placeholder="设置密码 (至少6位)" required>
                     </div>
-                    <div class="input-group">
-                        <div class="input-icon">🤝</div>
-                        <input type="text" id="regInviteCode" placeholder="邀请码 (选填，伴侣分享的码)">
-                    </div>
                     <div class="gender-select">
                         <label class="gender-option">
                             <input type="radio" name="gender" value="male" required>
@@ -1890,7 +1889,7 @@ html, body {
                 <div class="auth-logo">
                     <div class="logo-icon">🛡️</div>
                     <h1>管理后台</h1>
-                    <p>LoveNest Admin Panel</p>
+                    <p>LoveNest 管理后台</p>
                 </div>
                 <form id="adminLoginForm" class="auth-form">
                     <div class="input-group">
@@ -2084,6 +2083,11 @@ html, body {
                         <div class="profile-badge" id="profileBadge">单身模式</div>
                     </div>
                     <div class="profile-menu">
+                        <div class="menu-item" onclick="showBindPartnerModal()" id="menuBindPartner">
+                            <span class="menu-icon">🤝</span>
+                            <span class="menu-text">绑定伴侣</span>
+                            <span class="menu-arrow">›</span>
+                        </div>
                         <div class="menu-item" onclick="showInviteModal()">
                             <span class="menu-icon">🔗</span>
                             <span class="menu-text">邀请伴侣</span>
@@ -2275,8 +2279,8 @@ html, body {
 // ===== JSONBin 配置 =====
 const JSONBIN = {
     BASE_URL: 'https://api.jsonbin.io/v3/b',
-    MASTER_KEY: '$2a$10$GN0OqW.mNe1Xin03BlYkiO8dJypMNtrIDhBnH10zDIdt8am1ft5Mu',
-    BIN_ID: '6a3f7230da38895dfe064444'
+    MASTER_KEY: '',
+    BIN_ID: ''
 };
 
 // ===== 数据键名 =====
@@ -2335,72 +2339,41 @@ let CLOUD_CACHE = {};
 const CloudDB = {
     // 初始化：拉取云端数据
     async init() {
-        await this.pull();
-        console.log('[CloudDB] 初始化完成, Bin ID:', JSONBIN.BIN_ID);
+        // 本地模式：不依赖云端，直接用 localStorage
+        console.log('[DB] 本地模式初始化');
     },
 
-    // 从云端拉取全部数据
-    async pull() {
-        if (!JSONBIN.BIN_ID) return;
-        try {
-            const res = await fetch(`${JSONBIN.BASE_URL}/${JSONBIN.BIN_ID}/latest`, {
-                headers: { 'X-Master-Key': JSONBIN.MASTER_KEY }
-            });
-            if (!res.ok) {
-                console.error('[CloudDB] 拉取失败 HTTP', res.status);
-                return;
-            }
-            const data = await res.json();
-            CLOUD_CACHE = data.record || {};
-            console.log('[CloudDB] 拉取成功, users:', (CLOUD_CACHE.lovenest_users || []).length);
-        } catch (e) {
-            console.error('[CloudDB] 拉取失败:', e);
-        }
-    },
-
-    // 推送全部数据到云端
-    async push() {
-        if (!JSONBIN.BIN_ID) return false;
-        try {
-            const res = await fetch(`${JSONBIN.BASE_URL}/${JSONBIN.BIN_ID}`, {
-                method: 'PUT',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-Master-Key': JSONBIN.MASTER_KEY
-                },
-                body: JSON.stringify(CLOUD_CACHE)
-            });
-            if (!res.ok) {
-                console.error('[CloudDB] 推送失败 HTTP', res.status);
-                return false;
-            }
-            console.log('[CloudDB] 推送成功, users:', (CLOUD_CACHE.lovenest_users || []).length);
-            return true;
-        } catch (e) {
-            console.error('[CloudDB] 推送失败:', e);
-            return false;
-        }
-    }
+    async pull() { return; },
+    async push() { return true; }
 };
 
 // ===== 数据操作工具 =====
 const DB = {
     get(key) {
+        // 优先从内存缓存取
         if (CLOUD_CACHE[key] !== undefined) return CLOUD_CACHE[key];
-        // 回退到 LocalStorage（仅用于 session 等本地数据）
+        // 从 localStorage 取
         try {
             const data = localStorage.getItem(key);
-            return data ? JSON.parse(data) : null;
-        } catch (e) {
-            return null;
-        }
+            if (data !== null && data !== undefined) return JSON.parse(data);
+        } catch (e) {}
+        // 兜底默认值
+        if (key === DB_KEYS.QUOTES) return DEFAULT_QUOTES;
+        if (key === DB_KEYS.TASKS) return DEFAULT_TASK_TEMPLATES;
+        if (key === DB_KEYS.USERS) return [];
+        if (key === DB_KEYS.COUPLES) return [];
+        if (key === DB_KEYS.DIARIES) return [];
+        if (key === DB_KEYS.WISHES) return [];
+        if (key === DB_KEYS.ANNIVERSARIES) return [];
+        if (key === DB_KEYS.NOTIFICATIONS) return [];
+        if (key === DB_KEYS.DAILY_TASK_STATE) return {};
+        return null;
     },
 
-    // ⚠️ 所有数据写入都用这个 —— 确保推送到云端
+    // 数据写入：本地存储
     async set(key, value) {
         CLOUD_CACHE[key] = value;
-        try { localStorage.setItem(key, JSON.stringify(value)); } catch(e) {}
-        await CloudDB.push();
+        try { localStorage.setItem(key, JSON.stringify(value)); } catch(e) { console.warn('[DB] 本地保存失败:', e); }
     },
 
     // 同步版仅用于 session 等不需要同步的数据
@@ -2441,29 +2414,30 @@ const DB = {
 
 // ===== 初始化默认数据 =====
 async function initDataBase() {
-    await CloudDB.init();
-
-    // 确保云端有基础数据
-    let needPush = false;
-    if (!CLOUD_CACHE[DB_KEYS.QUOTES]) { CLOUD_CACHE[DB_KEYS.QUOTES] = DEFAULT_QUOTES; needPush = true; }
-    if (!CLOUD_CACHE[DB_KEYS.USERS]) { CLOUD_CACHE[DB_KEYS.USERS] = []; needPush = true; }
-    if (!CLOUD_CACHE[DB_KEYS.COUPLES]) { CLOUD_CACHE[DB_KEYS.COUPLES] = []; needPush = true; }
-    if (!CLOUD_CACHE[DB_KEYS.DIARIES]) { CLOUD_CACHE[DB_KEYS.DIARIES] = []; needPush = true; }
-    if (!CLOUD_CACHE[DB_KEYS.WISHES]) { CLOUD_CACHE[DB_KEYS.WISHES] = []; needPush = true; }
-    if (!CLOUD_CACHE[DB_KEYS.ANNIVERSARIES]) { CLOUD_CACHE[DB_KEYS.ANNIVERSARIES] = []; needPush = true; }
-    if (!CLOUD_CACHE[DB_KEYS.NOTIFICATIONS]) { CLOUD_CACHE[DB_KEYS.NOTIFICATIONS] = []; needPush = true; }
-    if (!CLOUD_CACHE[DB_KEYS.TASKS]) { CLOUD_CACHE[DB_KEYS.TASKS] = DEFAULT_TASK_TEMPLATES; needPush = true; }
-    if (!CLOUD_CACHE[DB_KEYS.DAILY_TASK_STATE]) { CLOUD_CACHE[DB_KEYS.DAILY_TASK_STATE] = {}; needPush = true; }
-    
-    if (needPush) await CloudDB.push();
+    // 版本检测：旧版数据自动清理
+    const DATA_VERSION = 'v9_20260627';
+    const storedVer = localStorage.getItem('lovenest_data_version');
+    if (storedVer !== DATA_VERSION) {
+        console.log('[DB] 版本更新，清理旧数据:', storedVer, '->', DATA_VERSION);
+        Object.values(DB_KEYS).forEach(k => localStorage.removeItem(k));
+        localStorage.setItem('lovenest_data_version', DATA_VERSION);
+    }
+    // 本地模式：确保 localStorage 有基础数据
+    let needInit = false;
+    if (!localStorage.getItem(DB_KEYS.QUOTES)) { localStorage.setItem(DB_KEYS.QUOTES, JSON.stringify(DEFAULT_QUOTES)); needInit = true; }
+    if (!localStorage.getItem(DB_KEYS.TASKS)) { localStorage.setItem(DB_KEYS.TASKS, JSON.stringify(DEFAULT_TASK_TEMPLATES)); needInit = true; }
+    if (!localStorage.getItem(DB_KEYS.USERS)) { localStorage.setItem(DB_KEYS.USERS, '[]'); needInit = true; }
+    if (!localStorage.getItem(DB_KEYS.COUPLES)) { localStorage.setItem(DB_KEYS.COUPLES, '[]'); needInit = true; }
+    if (!localStorage.getItem(DB_KEYS.DIARIES)) { localStorage.setItem(DB_KEYS.DIARIES, '[]'); needInit = true; }
+    if (!localStorage.getItem(DB_KEYS.WISHES)) { localStorage.setItem(DB_KEYS.WISHES, '[]'); needInit = true; }
+    if (!localStorage.getItem(DB_KEYS.ANNIVERSARIES)) { localStorage.setItem(DB_KEYS.ANNIVERSARIES, '[]'); needInit = true; }
+    if (!localStorage.getItem(DB_KEYS.NOTIFICATIONS)) { localStorage.setItem(DB_KEYS.NOTIFICATIONS, '[]'); needInit = true; }
+    if (!localStorage.getItem(DB_KEYS.DAILY_TASK_STATE)) { localStorage.setItem(DB_KEYS.DAILY_TASK_STATE, '{}'); needInit = true; }
 }
 
 // ===== 用户操作 =====
 const UserAPI = {
-    async register({ nickname, phone, password, gender, inviteCode }) {
-        // 拉取最新数据
-        await CloudDB.pull();
-
+    async register({ nickname, phone, password, gender }) {
         const users = DB.get(DB_KEYS.USERS) || [];
 
         if (!/^1[3-9]\d{9}$/.test(phone)) {
@@ -2477,61 +2451,20 @@ const UserAPI = {
         }
 
         const userId = DB.genId('user');
-        const inviteCodeOwn = DB.genInviteCode();
         const newUser = {
             id: userId,
             nickname,
             phone,
             password,
             gender,
-            avatar: gender === 'male' ? '👦' : '👧',
-            inviteCode: inviteCodeOwn,
+            avatar: gender === 'male' ? '🙋‍♂️' : '🙋‍♀️',
+            inviteCode: DB.genInviteCode(),
             partnerId: null,
             coupleId: null,
             loveScore: 0,
             createdAt: new Date().toISOString(),
             status: 'active'
         };
-
-        if (inviteCode) {
-            const partner = users.find(u => u.inviteCode === inviteCode);
-            if (!partner) {
-                return { success: false, message: '邀请码无效' };
-            }
-            if (partner.partnerId) {
-                return { success: false, message: 'TA已经绑定了伴侣' };
-            }
-
-            newUser.partnerId = partner.id;
-            partner.partnerId = newUser.id;
-
-            const coupleId = DB.genId('couple');
-            const couple = {
-                id: coupleId,
-                userA: partner.id,
-                userB: userId,
-                startDate: new Date().toISOString(),
-                loveScore: 0,
-                createdAt: new Date().toISOString()
-            };
-
-            newUser.coupleId = coupleId;
-            partner.coupleId = coupleId;
-
-            const couples = DB.get(DB_KEYS.COUPLES) || [];
-            couples.push(couple);
-            await DB.set(DB_KEYS.COUPLES, couples);
-
-            await NotificationAPI.add(partner.id, '💞 你的伴侣已注册成功！', '你们已成功绑定情侣关系');
-
-            await AnniversaryAPI.add({
-                coupleId,
-                name: '我们在一起',
-                date: new Date().toISOString().slice(0, 10),
-                icon: '💕',
-                isAuto: true
-            });
-        }
 
         users.push(newUser);
         await DB.set(DB_KEYS.USERS, users);
@@ -2788,7 +2721,58 @@ const CoupleAPI = {
         const couple = this.get(coupleId);
         if (!couple) return 0;
         return AnniversaryAPI.calcDays(couple.startDate.slice(0, 10));
-    }
+    },
+
+    async bindByInviteCode(userId, inviteCode) {
+        const users = DB.get(DB_KEYS.USERS) || [];
+        const partner = users.find(u => u.inviteCode === inviteCode);
+        if (!partner) {
+            return { success: false, message: '邀请码无效' };
+        }
+        if (partner.id === userId) {
+            return { success: false, message: '不能绑定自己' };
+        }
+        if (partner.partnerId) {
+            return { success: false, message: 'TA已经绑定了伴侣' };
+        }
+
+        const me = users.find(u => u.id === userId);
+        if (!me) return { success: false, message: '用户不存在' };
+        if (me.partnerId) return { success: false, message: '你已经绑定伴侣了' };
+
+        me.partnerId = partner.id;
+        partner.partnerId = me.id;
+
+        const coupleId = DB.genId('couple');
+        const couple = {
+            id: coupleId,
+            userA: partner.id,
+            userB: userId,
+            startDate: new Date().toISOString(),
+            loveScore: 0,
+            createdAt: new Date().toISOString()
+        };
+
+        me.coupleId = coupleId;
+        partner.coupleId = coupleId;
+
+        const couples = DB.get(DB_KEYS.COUPLES) || [];
+        couples.push(couple);
+        await DB.set(DB_KEYS.COUPLES, couples);
+        await DB.set(DB_KEYS.USERS, users);
+
+        await NotificationAPI.add(partner.id, '💕 你的伴侣已绑定成功！', '你们已成功绑定情侣关系');
+
+        await AnniversaryAPI.add({
+            coupleId,
+            name: '我们在一起',
+            date: new Date().toISOString().slice(0, 10),
+            icon: '💕',
+            isAuto: true
+        });
+
+        return { success: true, coupleId };
+    },
 };
 
 // ===== 情话操作 =====
@@ -3129,12 +3113,28 @@ function renderDiaries() {
     const container = document.getElementById('diaryTimeline');
     
     if (!user.coupleId) {
-        container.innerHTML = `
-            <div class="empty-state">
-                <div class="empty-icon">💌</div>
-                <div class="empty-text">绑定伴侣后可以一起写恋爱日记哦~</div>
-            </div>
-        `;
+        // 未绑定伴侣也能看自己的日记
+        const diaries = (DB.get(DB_KEYS.DIARIES) || []).filter(d => d.userId === user.id).sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+        if (diaries.length === 0) {
+            container.innerHTML = `
+                <div class="empty-state">
+                    <div class="empty-icon">📖</div>
+                    <div class="empty-text">还没有日记，点击右上角写下你的第一篇日记吧！</div>
+                </div>
+            `;
+        } else {
+            container.innerHTML = diaries.map(d => `
+                <div class="diary-card" onclick="toggleDiary(this)">
+                    <div class="diary-date">${Utils.formatDate(d.createdAt)} ${Utils.formatTime(d.createdAt)} · ${d.mood}</div>
+                    <div class="diary-title">${escapeHTML(d.title)}</div>
+                    <div class="diary-content">${escapeHTML(d.content)}</div>
+                    <div class="diary-footer">
+                        <span class="diary-author">${user.avatar} ${user.nickname}</span>
+                        <span class="diary-mood" onclick="event.stopPropagation();deleteDiary('${d.id}')">🗑️ 删除</span>
+                    </div>
+                </div>
+            `).join('');
+        }
         return;
     }
 
@@ -3228,18 +3228,8 @@ function renderWishes() {
     const user = UserAPI.current();
     if (!user) return;
 
-    if (!user.coupleId) {
-        document.getElementById('wishList').innerHTML = `
-            <div class="empty-state">
-                <div class="empty-icon">🌟</div>
-                <div class="empty-text">绑定伴侣后可以一起创建愿望清单哦~</div>
-            </div>
-        `;
-        updateWishStats([]);
-        return;
-    }
-
-    const wishes = WishAPI.getByCouple(user.coupleId);
+    const coupleId = user.coupleId || user.id;
+    const wishes = WishAPI.getByCouple(user.coupleId || user.id);
     updateWishStats(wishes);
 
     if (wishes.length === 0) {
@@ -3322,20 +3312,11 @@ function renderAnniversaries() {
     const user = UserAPI.current();
     if (!user) return;
 
-    if (!user.coupleId) {
-        document.getElementById('anniversaryList').innerHTML = `
-            <div class="empty-state">
-                <div class="empty-icon">🎉</div>
-                <div class="empty-text">绑定伴侣后可以记录你们的纪念日哦~</div>
-            </div>
-        `;
-        return;
-    }
-
+    const coupleId = user.coupleId || user.id;
     const annivs = AnniversaryAPI.getByCouple(user.coupleId);
 
     // 下一个纪念日倒计时
-    const next = AnniversaryAPI.nextAnniversary(user.coupleId);
+    const next = AnniversaryAPI.nextAnniversary(user.coupleId || user.id);
     if (next) {
         document.getElementById('nextAnnivDays').textContent = `${next.daysLeft} 天`;
         document.getElementById('nextAnnivName').textContent = next.name;
@@ -3401,7 +3382,7 @@ function showAnniversaryEditor() {
 
 async function submitAnniversary() {
     const user = UserAPI.current();
-    if (!user || !user.coupleId) return;
+    if (!user) return;
 
     const name = document.getElementById('annivName').value.trim();
     const date = document.getElementById('annivDate').value;
@@ -3412,7 +3393,7 @@ async function submitAnniversary() {
         return;
     }
 
-    await AnniversaryAPI.add({ coupleId: user.coupleId, name, date, icon });
+    await AnniversaryAPI.add({ coupleId: user.coupleId || user.id, name, date, icon });
     closeModal();
     showToast('纪念日已添加 🎉', 'success');
     renderAnniversaries();
@@ -3429,19 +3410,21 @@ function renderProfile() {
     const user = UserAPI.current();
     if (!user) return;
 
-    document.getElementById('profileAvatar').textContent = user.avatar || (user.gender === 'male' ? '👦' : '👧');
+    document.getElementById('profileAvatar').textContent = user.avatar || '😊';
     document.getElementById('profileName').textContent = user.nickname;
     document.getElementById('profilePhone').textContent = Utils.maskPhone(user.phone);
 
     const partner = UserAPI.getPartner();
     const badge = document.getElementById('profileBadge');
+    const bindMenu = document.getElementById('menuBindPartner');
     if (partner) {
-        badge.textContent = `💕 与 ${partner.nickname} 恋爱中`;
+        badge.textContent = '💖 与 ' + partner.nickname + ' 恋爱中';
+        if (bindMenu) bindMenu.style.display = 'none';
     } else {
         badge.textContent = '单身模式 - 邀请伴侣加入吧！';
+        if (bindMenu) bindMenu.style.display = '';
     }
 }
-
 // ===== 邀请伴侣 =====
 function showInviteModal() {
     const user = UserAPI.current();
@@ -3516,6 +3499,82 @@ async function submitProfile() {
 
 // ===== 设置 =====
 function showSettings() {
+    const user = UserAPI.current();
+    if (!user) return;
+
+    let bindPartnerHtml = '';
+    if (!user.partnerId) {
+        bindPartnerHtml = `
+            <div class="menu-item" onclick="showBindPartnerModal()">
+                <span class="menu-icon">🤝</span>
+                <span class="menu-text">填写邀请码绑定伴侣</span>
+                <span class="menu-arrow">›</span>
+            </div>
+        `;
+    }
+
+    showModal('⚙️ 设置', `
+        <div style="padding:8px 0;">
+        ${bindPartnerHtml}
+            <div class="menu-item" onclick="clearCache()">
+                <span class="menu-icon">🧹</span>
+                <span class="menu-text">清除缓存</span>
+            </div>
+            <div class="menu-item" onclick="showAbout()">
+                <span class="menu-icon">ℹ️</span>
+                <span class="menu-text">关于 LoveNest</span>
+            </div>
+        </div>
+    `);
+}
+
+function showBindPartnerModal() {
+    const user = UserAPI.current();
+    if (!user) return;
+    if (user.partnerId) {
+        showToast('你已经绑定伴侣了', 'default');
+        return;
+    }
+    showModal('🤝 绑定伴侣', `
+        <div style="padding:12px 0;">
+            <div style="text-align:center;margin-bottom:20px;">
+                <p style="font-size:12px;color:#8a7a8e;margin-bottom:8px;">我的邀请码（分享给TA）</p>
+                <div style="background:linear-gradient(135deg,#ff6b9d,#ff8e53);border-radius:16px;padding:20px;margin-bottom:8px;">
+                    <p style="font-size:32px;font-weight:700;color:#fff;letter-spacing:4px;">${user.inviteCode}</p>
+                </div>
+                <button class="btn-primary" style="width:auto;padding:8px 20px;font-size:14px;" onclick="copyInviteCode('${user.inviteCode}')">复制我的邀请码</button>
+            </div>
+            <div style="text-align:center;border-top:1px dashed #e0d0e0;padding-top:20px;">
+                <p style="font-size:14px;color:#8a7a8e;margin-bottom:12px;">输入TA的邀请码，绑定后共同使用所有功能</p>
+                <input type="text" class="modal-input" id="bindInviteCode" placeholder="输入对方邀请码" style="text-align:center;font-size:20px;letter-spacing:4px;text-transform:uppercase;margin-bottom:16px;">
+                <button class="btn-primary" onclick="bindPartner()">确认绑定</button>
+            </div>
+        </div>
+    `);
+}
+
+async function bindPartner() {
+    const user = UserAPI.current();
+    if (!user) return;
+
+    const inviteCode = document.getElementById('bindInviteCode').value.trim().toUpperCase();
+    if (!inviteCode) {
+        showToast('请输入邀请码', 'error');
+        return;
+    }
+
+    const result = await CoupleAPI.bindByInviteCode(user.id, inviteCode);
+    if (result.success) {
+        closeModal();
+        showToast('绑定成功！你们现在是情侣了 💖', 'success');
+        renderHome();
+        renderProfile();
+    } else {
+        showToast(result.message, 'error');
+    }
+}
+
+function showSettingsOld() {
     showModal('⚙️ 设置', `
         <div style="padding:8px 0;">
             <div class="menu-item" onclick="clearCache()">
@@ -3890,7 +3949,9 @@ function bindForms() {
     // 注册表单
     document.getElementById('registerForm')?.addEventListener('submit', (e) => {
         e.preventDefault();
-        handleRegister();
+        e.stopPropagation();
+        // 同步调用，不等待
+        handleRegister().catch(err => console.error('[Register] unhandled:', err));
     });
 
     // 管理员登录表单
@@ -3912,31 +3973,84 @@ function bindForms() {
 
 // ===== 注册处理 =====
 async function handleRegister() {
+    // 防抖：禁止重复点击
+    const btn = document.querySelector('#registerForm button[type="submit"]');
+    if (btn && btn.disabled) { console.log('[Register] blocked: button disabled'); return; }
+    if (btn) btn.disabled = true;
+
     const nickname = document.getElementById('regNickname').value.trim();
     const phone = document.getElementById('regPhone').value.trim();
     const password = document.getElementById('regPassword').value;
-    const inviteCode = document.getElementById('regInviteCode').value.trim();
     const gender = document.querySelector('input[name="gender"]:checked')?.value;
     const agreed = document.getElementById('agreeTerms').checked;
 
-    if (!nickname) { showToast('请输入昵称', 'error'); return; }
-    if (!/^1[3-9]\d{9}$/.test(phone)) { showToast('请输入正确的手机号', 'error'); return; }
-    if (password.length < 6) { showToast('密码至少6位', 'error'); return; }
-    if (!gender) { showToast('请选择性别', 'error'); return; }
-    if (!agreed) { showToast('请同意用户协议', 'error'); return; }
+    if (!nickname) { showToast('请输入昵称', 'error'); btn && (btn.disabled = false); return; }
+    if (!/^1[3-9]\d{9}$/.test(phone)) { showToast('请输入正确的手机号', 'error'); btn && (btn.disabled = false); return; }
+    if (password.length < 6) { showToast('密码至少6位', 'error'); btn && (btn.disabled = false); return; }
+    if (!gender) { showToast('请选择性别', 'error'); btn && (btn.disabled = false); return; }
+    if (!agreed) { showToast('请同意用户协议', 'error'); btn && (btn.disabled = false); return; }
 
     showToast('注册中...', 'default');
-    const result = await UserAPI.register({ nickname, phone, password, gender, inviteCode });
-    if (result.success) {
+
+    // 超时保护：3秒后强制完成
+    const timeoutId = setTimeout(() => {
+        console.error('[Register] TIMEOUT - forcing completion');
+        btn && (btn.disabled = false);
+    }, 3000);
+
+    try {
+        console.log('[Register] start:', { nickname, phone, gender });
+
+        // 同步写入版本（绕过 async 链）
+        const users = DB.get(DB_KEYS.USERS) || [];
+        if (users.find(u => u.phone === phone)) {
+            clearTimeout(timeoutId);
+            showToast('该手机号已注册', 'error');
+            btn && (btn.disabled = false);
+            return;
+        }
+
+        const newUser = {
+            id: DB.genId('user'),
+            nickname,
+            phone,
+            password,
+            gender,
+            avatar: gender === 'male' ? '🙋♂️' : '🙋♀️',
+            inviteCode: DB.genInviteCode(),
+            partnerId: null,
+            coupleId: null,
+            loveScore: 0,
+            createdAt: new Date().toISOString(),
+            status: 'active'
+        };
+
+        users.push(newUser);
+        // 同步写入
+        CLOUD_CACHE[DB_KEYS.USERS] = users;
+        try { localStorage.setItem(DB_KEYS.USERS, JSON.stringify(users)); } catch(e) { console.error('[DB] set fail:', e); }
+
+        console.log('[Register] user saved:', newUser.id);
+
+        clearTimeout(timeoutId);
         showToast('注册成功！欢迎加入 LoveNest 💕', 'love');
         spawnRandomHearts();
-        await UserAPI.login(phone, password);
+
+        // 同步登录
+        DB.setLocal(DB_KEYS.SESSION, { userId: newUser.id, loginAt: Date.now() });
+        console.log('[Register] login done');
+
+        btn && (btn.disabled = false);
         setTimeout(() => {
             showPage('mainApp');
             renderHome();
-        }, 1000);
-    } else {
-        showToast(result.message, 'error');
+        }, 800);
+
+    } catch (err) {
+        clearTimeout(timeoutId);
+        console.error('[Register] error:', err);
+        showToast('注册失败: ' + (err && err.message ? err.message : String(err)), 'error');
+        btn && (btn.disabled = false);
     }
 }
 
