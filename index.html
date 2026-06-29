@@ -2344,21 +2344,21 @@ const JSONBIN_URL = `https://api.jsonbin.io/v3/b/${JSONBIN_BIN_ID}`;
 // ===== 云端 API 封装 =====
 const CloudDB = {
     async init() {
-        console.log('[CloudDB.init] 开始初始化...');
+
         try {
-            console.log('[CloudDB.init] 请求 JSONBin:', JSONBIN_URL + '/latest');
+
             const resp = await fetch(JSONBIN_URL + '/latest', {
                 headers: { 'X-Master-Key': JSONBIN_API_KEY }
             });
-            console.log('[CloudDB.init] 响应状态:', resp.status);
+
             const json = await resp.json();
-            console.log('[CloudDB.init] JSON 响应:', JSON.stringify(json));
+
             if (json.record) {
                 CLOUD_CACHE = json.record;
                 _cloudReady = true;
-                console.log('[CloudDB.init] ✅ 初始化成功，keys:', Object.keys(CLOUD_CACHE));
+
             } else {
-                console.warn('[CloudDB.init] ⚠️ record 为空:', json);
+
             }
         } catch (e) {
             console.error('[CloudDB.init] ❌ 初始化失败:', e.message, e);
@@ -2366,12 +2366,12 @@ const CloudDB = {
     },
 
     async pull() {
-        console.log('[CloudDB.pull] 拉取云端数据...');
+
         try {
             const resp = await fetch(JSONBIN_URL + '/latest', {
                 headers: { 'X-Master-Key': JSONBIN_API_KEY }
             });
-            console.log('[CloudDB.pull] 状态:', resp.status);
+    
             const json = await resp.json();
             if (json.record) {
                 const serverData = json.record;
@@ -2380,7 +2380,7 @@ const CloudDB = {
                 CLOUD_CACHE = serverData;
                 if (localSession) CLOUD_CACHE['lovenest_session'] = JSON.parse(localSession);
                 if (localAdmin) CLOUD_CACHE['lovenest_admin_session'] = JSON.parse(localAdmin);
-                console.log('[CloudDB.pull] ✅ 拉取成功，users:', (serverData.lovenest_users || []).length);
+        
             } else {
                 console.warn('[CloudDB.pull] ⚠️ record 为空');
             }
@@ -2390,14 +2390,14 @@ const CloudDB = {
     },
 
     async push(key, value) {
-        console.log('[CloudDB.push] 推送 key:', key, 'value length:', Array.isArray(value) ? value.length : typeof value);
+
         try {
             // 1. 先拉取最新完整数据
             const pullResp = await fetch(JSONBIN_URL + '/latest', {
                 headers: { 'X-Master-Key': JSONBIN_API_KEY }
             });
             const pullJson = await pullResp.json();
-            console.log('[CloudDB.push] 拉取状态:', pullResp.status, 'has record:', !!pullJson.record);
+
             
             // 2. 用最新数据 + 新 value 合并
             const dataToSave = pullJson.record || {};
@@ -2407,7 +2407,7 @@ const CloudDB = {
             const localSession = localStorage.getItem('lovenest_session');
             if (localSession) dataToSave['lovenest_session'] = JSON.parse(localSession);
             
-            console.log('[CloudDB.push] 写入数据 keys:', Object.keys(dataToSave));
+
             
             // 4. 写回 JSONBin
             const pushResp = await fetch(JSONBIN_URL, {
@@ -2418,15 +2418,15 @@ const CloudDB = {
                 },
                 body: JSON.stringify(dataToSave)
             });
-            console.log('[CloudDB.push] 写入状态:', pushResp.status);
+
             
             const pushJson = await pushResp.json();
             if (pushJson.record) {
                 CLOUD_CACHE = pushJson.record;
-                console.log('[CloudDB.push] ✅ 推送成功!');
+
                 return true;
             } else {
-                console.warn('[CloudDB.push] ⚠️ 写入响应无 record:', pushJson);
+
                 return false;
             }
         } catch (e) {
@@ -2457,14 +2457,19 @@ const DB = {
     },
 
     async set(key, value) {
-        console.log('[DB.set] key:', key, '更新中...');
         CLOUD_CACHE[key] = value;
         try { localStorage.setItem(key, JSON.stringify(value)); } catch(e) {}
-        const ok = await CloudDB.push(key, value);
-        console.log('[DB.set] key:', key, ok ? '✅ 写入成功' : '❌ 写入失败');
+        // 异步推送云端，不阻塞 UI
+        CloudDB.push(key, value).catch(e => console.warn('[DB.set] push fail:', key, e.message));
     },
 
-    setLocal(key, value) {
+    // setAsync: 等待云端写入完成后再返回（管理后台等需要确认的场景）
+    async setAsync(key, value) {
+        CLOUD_CACHE[key] = value;
+        try { localStorage.setItem(key, JSON.stringify(value)); } catch(e) {}
+        await CloudDB.push(key, value);
+    },
+setLocal(key, value) {
         try { localStorage.setItem(key, JSON.stringify(value)); } catch(e) {}
     },
 
