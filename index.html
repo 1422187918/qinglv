@@ -2334,25 +2334,84 @@ const DEFAULT_TASK_TEMPLATES = [
 
 // ===== 云端缓存（内存） =====
 let CLOUD_CACHE = {};
+let _cloudReady = false;
 
-// ===== 云端API封装 =====
+// ===== 云端API封装（真正调用后端API）=====
 const CloudDB = {
-    // 初始化：拉取云端数据
     async init() {
-        // 本地模式：不依赖云端，直接用 localStorage
-        console.log('[DB] 本地模式初始化');
+        console.log('[CloudDB] 初始化 - 从服务器拉取数据');
+        try {
+            const resp = await fetch('/api/data');
+            const json = await resp.json();
+            if (json.success && json.data) {
+                CLOUD_CACHE = json.data;
+                _cloudReady = true;
+                console.log('[CloudDB] 拉取成功, keys:', Object.keys(CLOUD_CACHE));
+            }
+        } catch (e) {
+            console.warn('[CloudDB] 拉取失败，使用本地数据:', e.message);
+        }
     },
 
-    async pull() { return; },
-    async push() { return true; }
+    async pull() {
+        try {
+            const resp = await fetch('/api/data');
+            const json = await resp.json();
+            if (json.success && json.data) {
+                // 合并：服务器数据优先，但保留本地 session
+                const serverData = json.data;
+                const localSession = localStorage.getItem('lovenest_session');
+                const localAdmin = localStorage.getItem('lovenest_admin_session');
+                CLOUD_CACHE = serverData;
+                if (localSession) CLOUD_CACHE['lovenest_session'] = JSON.parse(localSession);
+                if (localAdmin) CLOUD_CACHE['lovenest_admin_session'] = JSON.parse(localAdmin);
+                console.log('[CloudDB] pull 成功');
+            }
+        } catch (e) {
+            console.warn('[CloudDB] pull 失败:', e.message);
+        }
+    },
+
+    async push() {
+        try {
+            const resp = await fetch('/api/data', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(CLOUD_CACHE)
+            });
+            const json = await resp.json();
+            console.log('[CloudDB] push 结果:', json.success);
+            return json.success;
+        } catch (e) {
+            console.error('[CloudDB] push 失败:', e.message);
+            return false;
+        }
+    },
+
+    // 推送单个 key
+    async pushKey(key, value) {
+        CLOUD_CACHE[key] = value;
+        try {
+            const resp = await fetch('/api/push', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ key, value })
+            });
+            const json = await resp.json();
+            return json.success;
+        } catch (e) {
+            console.error('[CloudDB] pushKey 失败:', e.message);
+            return false;
+        }
+    }
 };
 
 // ===== 数据操作工具 =====
 const DB = {
     get(key) {
         // 优先从内存缓存取
-        if (CLOUD_CACHE[key] !== undefined) return CLOUD_CACHE[key];
-        // 从 localStorage 取
+        if (CLOUD_CACHE[key] !== undefined && CLOUD_CACHE[key] !== null) return CLOUD_CACHE[key];
+        // 从 localStorage 取（session 等本地数据）
         try {
             const data = localStorage.getItem(key);
             if (data !== null && data !== undefined) return JSON.parse(data);
@@ -2370,10 +2429,11 @@ const DB = {
         return null;
     },
 
-    // 数据写入：本地存储
+    // 数据写入：更新缓存 + 推送到服务器
     async set(key, value) {
         CLOUD_CACHE[key] = value;
         try { localStorage.setItem(key, JSON.stringify(value)); } catch(e) { console.warn('[DB] 本地保存失败:', e); }
+        await CloudDB.pushKey(key, value);
     },
 
     // 同步版仅用于 session 等不需要同步的数据
@@ -2415,24 +2475,51 @@ const DB = {
 // ===== 初始化默认数据 =====
 async function initDataBase() {
     // 版本检测：旧版数据自动清理
-    const DATA_VERSION = 'v9_20260627';
+    const DATA_VERSION = 'v11_jsonbin_20260629';
     const storedVer = localStorage.getItem('lovenest_data_version');
     if (storedVer !== DATA_VERSION) {
         console.log('[DB] 版本更新，清理旧数据:', storedVer, '->', DATA_VERSION);
         Object.values(DB_KEYS).forEach(k => localStorage.removeItem(k));
         localStorage.setItem('lovenest_data_version', DATA_VERSION);
     }
-    // 本地模式：确保 localStorage 有基础数据
-    let needInit = false;
-    if (!localStorage.getItem(DB_KEYS.QUOTES)) { localStorage.setItem(DB_KEYS.QUOTES, JSON.stringify(DEFAULT_QUOTES)); needInit = true; }
-    if (!localStorage.getItem(DB_KEYS.TASKS)) { localStorage.setItem(DB_KEYS.TASKS, JSON.stringify(DEFAULT_TASK_TEMPLATES)); needInit = true; }
-    if (!localStorage.getItem(DB_KEYS.USERS)) { localStorage.setItem(DB_KEYS.USERS, '[]'); needInit = true; }
-    if (!localStorage.getItem(DB_KEYS.COUPLES)) { localStorage.setItem(DB_KEYS.COUPLES, '[]'); needInit = true; }
-    if (!localStorage.getItem(DB_KEYS.DIARIES)) { localStorage.setItem(DB_KEYS.DIARIES, '[]'); needInit = true; }
-    if (!localStorage.getItem(DB_KEYS.WISHES)) { localStorage.setItem(DB_KEYS.WISHES, '[]'); needInit = true; }
-    if (!localStorage.getItem(DB_KEYS.ANNIVERSARIES)) { localStorage.setItem(DB_KEYS.ANNIVERSARIES, '[]'); needInit = true; }
-    if (!localStorage.getItem(DB_KEYS.NOTIFICATIONS)) { localStorage.setItem(DB_KEYS.NOTIFICATIONS, '[]'); needInit = true; }
-    if (!localStorage.getItem(DB_KEYS.DAILY_TASK_STATE)) { localStorage.setItem(DB_KEYS.DAILY_TASK_STATE, '{}'); needInit = true; }
+
+    // 从服务器拉取数据
+    await CloudDB.init();
+
+    // 如果服务器没有基础数据，初始化默认数据并推送
+    if (!CLOUD_CACHE[DB_KEYS.QUOTES]) {
+        CLOUD_CACHE[DB_KEYS.QUOTES] = DEFAULT_QUOTES;
+        await CloudDB.pushKey(DB_KEYS.QUOTES, DEFAULT_QUOTES);
+    }
+    if (!CLOUD_CACHE[DB_KEYS.TASKS]) {
+        CLOUD_CACHE[DB_KEYS.TASKS] = DEFAULT_TASK_TEMPLATES;
+        await CloudDB.pushKey(DB_KEYS.TASKS, DEFAULT_TASK_TEMPLATES);
+    }
+    if (!CLOUD_CACHE[DB_KEYS.USERS]) {
+        CLOUD_CACHE[DB_KEYS.USERS] = [];
+        await CloudDB.pushKey(DB_KEYS.USERS, []);
+    }
+    if (!CLOUD_CACHE[DB_KEYS.COUPLES]) {
+        CLOUD_CACHE[DB_KEYS.COUPLES] = [];
+        await CloudDB.pushKey(DB_KEYS.COUPLES, []);
+    }
+    if (!CLOUD_CACHE[DB_KEYS.DIARIES]) {
+        CLOUD_CACHE[DB_KEYS.DIARIES] = [];
+        await CloudDB.pushKey(DB_KEYS.DIARIES, []);
+    }
+    if (!CLOUD_CACHE[DB_KEYS.WISHES]) {
+        CLOUD_CACHE[DB_KEYS.WISHES] = [];
+        await CloudDB.pushKey(DB_KEYS.WISHES, []);
+    }
+    if (!CLOUD_CACHE[DB_KEYS.ANNIVERSARIES]) {
+        CLOUD_CACHE[DB_KEYS.ANNIVERSARIES] = [];
+        await CloudDB.pushKey(DB_KEYS.ANNIVERSARIES, []);
+    }
+    if (!CLOUD_CACHE[DB_KEYS.NOTIFICATIONS]) {
+        CLOUD_CACHE[DB_KEYS.NOTIFICATIONS] = [];
+        await CloudDB.pushKey(DB_KEYS.NOTIFICATIONS, []);
+    }
+    if (!localStorage.getItem(DB_KEYS.DAILY_TASK_STATE)) { localStorage.setItem(DB_KEYS.DAILY_TASK_STATE, '{}'); }
 }
 
 // ===== 用户操作 =====
@@ -4001,7 +4088,8 @@ async function handleRegister() {
     try {
         console.log('[Register] start:', { nickname, phone, gender });
 
-        // 同步写入版本（绕过 async 链）
+        // 从服务器获取最新用户列表
+        await CloudDB.pull();
         const users = DB.get(DB_KEYS.USERS) || [];
         if (users.find(u => u.phone === phone)) {
             clearTimeout(timeoutId);
@@ -4016,7 +4104,7 @@ async function handleRegister() {
             phone,
             password,
             gender,
-            avatar: gender === 'male' ? '🙋♂️' : '🙋♀️',
+            avatar: gender === 'male' ? '🙋‍♂️' : '🙋‍♀️',
             inviteCode: DB.genInviteCode(),
             partnerId: null,
             coupleId: null,
@@ -4026,9 +4114,8 @@ async function handleRegister() {
         };
 
         users.push(newUser);
-        // 同步写入
-        CLOUD_CACHE[DB_KEYS.USERS] = users;
-        try { localStorage.setItem(DB_KEYS.USERS, JSON.stringify(users)); } catch(e) { console.error('[DB] set fail:', e); }
+        // 写入本地 + 推送到服务器
+        await DB.set(DB_KEYS.USERS, users);
 
         console.log('[Register] user saved:', newUser.id);
 
