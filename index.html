@@ -2336,35 +2336,42 @@ const DEFAULT_TASK_TEMPLATES = [
 let CLOUD_CACHE = {};
 let _cloudReady = false;
 
-// JSONBin 配置 — 直接前端调用，无需 server.js
+// JSONBin 配置
 const JSONBIN_API_KEY = '$2a$10$GN0OqW.mNe1Xin03BlYkiO8dJypMNtrIDhBnH10zDIdt8am1ft5Mu';
 const JSONBIN_BIN_ID = '6a41bf6fda38895dfe0d88f7';
 const JSONBIN_URL = `https://api.jsonbin.io/v3/b/${JSONBIN_BIN_ID}`;
 
-// ===== 云端API封装（直连 JSONBin）=====
+// ===== 云端 API 封装 =====
 const CloudDB = {
     async init() {
-        console.log('[CloudDB] 初始化 - 从 JSONBin 拉取数据');
+        console.log('[CloudDB.init] 开始初始化...');
         try {
+            console.log('[CloudDB.init] 请求 JSONBin:', JSONBIN_URL + '/latest');
             const resp = await fetch(JSONBIN_URL + '/latest', {
                 headers: { 'X-Master-Key': JSONBIN_API_KEY }
             });
+            console.log('[CloudDB.init] 响应状态:', resp.status);
             const json = await resp.json();
+            console.log('[CloudDB.init] JSON 响应:', JSON.stringify(json));
             if (json.record) {
                 CLOUD_CACHE = json.record;
                 _cloudReady = true;
-                console.log('[CloudDB] 拉取成功, keys:', Object.keys(CLOUD_CACHE));
+                console.log('[CloudDB.init] ✅ 初始化成功，keys:', Object.keys(CLOUD_CACHE));
+            } else {
+                console.warn('[CloudDB.init] ⚠️ record 为空:', json);
             }
         } catch (e) {
-            console.warn('[CloudDB] 拉取失败，使用本地数据:', e.message);
+            console.error('[CloudDB.init] ❌ 初始化失败:', e.message, e);
         }
     },
 
     async pull() {
+        console.log('[CloudDB.pull] 拉取云端数据...');
         try {
             const resp = await fetch(JSONBIN_URL + '/latest', {
                 headers: { 'X-Master-Key': JSONBIN_API_KEY }
             });
+            console.log('[CloudDB.pull] 状态:', resp.status);
             const json = await resp.json();
             if (json.record) {
                 const serverData = json.record;
@@ -2373,63 +2380,57 @@ const CloudDB = {
                 CLOUD_CACHE = serverData;
                 if (localSession) CLOUD_CACHE['lovenest_session'] = JSON.parse(localSession);
                 if (localAdmin) CLOUD_CACHE['lovenest_admin_session'] = JSON.parse(localAdmin);
-                console.log('[CloudDB] pull 成功');
+                console.log('[CloudDB.pull] ✅ 拉取成功，users:', (serverData.lovenest_users || []).length);
+            } else {
+                console.warn('[CloudDB.pull] ⚠️ record 为空');
             }
         } catch (e) {
-            console.warn('[CloudDB] pull 失败:', e.message);
+            console.error('[CloudDB.pull] ❌ 拉取失败:', e.message);
         }
     },
 
-    async push() {
+    async push(key, value) {
+        console.log('[CloudDB.push] 推送 key:', key, 'value length:', Array.isArray(value) ? value.length : typeof value);
         try {
-            const resp = await fetch(JSONBIN_URL, {
-                method: 'PUT',
-                headers: {
-                    'X-Master-Key': JSONBIN_API_KEY,
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify(CLOUD_CACHE)
-            });
-            const json = await resp.json();
-            console.log('[CloudDB] push 结果:', !!json.record);
-            return !!json.record;
-        } catch (e) {
-            console.error('[CloudDB] push 失败:', e.message);
-            return false;
-        }
-    },
-
-    // 推送单个 key（读-改-写）
-    async pushKey(key, value) {
-        CLOUD_CACHE[key] = value;
-        try {
-            // 先拉取最新数据，合并后写回（防止覆盖其他 key）
+            // 1. 先拉取最新完整数据
             const pullResp = await fetch(JSONBIN_URL + '/latest', {
                 headers: { 'X-Master-Key': JSONBIN_API_KEY }
             });
             const pullJson = await pullResp.json();
-            if (pullJson.record) {
-                pullJson.record[key] = value;
-                // 保留 session 等本地数据
-                const localSession = localStorage.getItem('lovenest_session');
-                if (localSession) pullJson.record['lovenest_session'] = JSON.parse(localSession);
-            }
-            const merged = pullJson.record || CLOUD_CACHE;
-            merged[key] = value;
+            console.log('[CloudDB.push] 拉取状态:', pullResp.status, 'has record:', !!pullJson.record);
             
-            const resp = await fetch(JSONBIN_URL, {
+            // 2. 用最新数据 + 新 value 合并
+            const dataToSave = pullJson.record || {};
+            dataToSave[key] = value;
+            
+            // 3. 保留 session 等本地数据
+            const localSession = localStorage.getItem('lovenest_session');
+            if (localSession) dataToSave['lovenest_session'] = JSON.parse(localSession);
+            
+            console.log('[CloudDB.push] 写入数据 keys:', Object.keys(dataToSave));
+            
+            // 4. 写回 JSONBin
+            const pushResp = await fetch(JSONBIN_URL, {
                 method: 'PUT',
                 headers: {
                     'X-Master-Key': JSONBIN_API_KEY,
                     'Content-Type': 'application/json'
                 },
-                body: JSON.stringify(merged)
+                body: JSON.stringify(dataToSave)
             });
-            const json = await resp.json();
-            CLOUD_CACHE = json.record || merged;
-            return !!json.record;
+            console.log('[CloudDB.push] 写入状态:', pushResp.status);
+            
+            const pushJson = await pushResp.json();
+            if (pushJson.record) {
+                CLOUD_CACHE = pushJson.record;
+                console.log('[CloudDB.push] ✅ 推送成功!');
+                return true;
+            } else {
+                console.warn('[CloudDB.push] ⚠️ 写入响应无 record:', pushJson);
+                return false;
+            }
         } catch (e) {
-            console.error('[CloudDB] pushKey 失败:', e.message);
+            console.error('[CloudDB.push] ❌ 推送失败:', e.message, e);
             return false;
         }
     }
@@ -2441,7 +2442,7 @@ const DB = {
         if (CLOUD_CACHE[key] !== undefined && CLOUD_CACHE[key] !== null) return CLOUD_CACHE[key];
         try {
             const data = localStorage.getItem(key);
-            if (data !== null && data !== undefined) return JSON.parse(data);
+            if (data !== null) return JSON.parse(data);
         } catch (e) {}
         if (key === DB_KEYS.QUOTES) return DEFAULT_QUOTES;
         if (key === DB_KEYS.TASKS) return DEFAULT_TASK_TEMPLATES;
@@ -2456,9 +2457,11 @@ const DB = {
     },
 
     async set(key, value) {
+        console.log('[DB.set] key:', key, '更新中...');
         CLOUD_CACHE[key] = value;
-        try { localStorage.setItem(key, JSON.stringify(value)); } catch(e) { console.warn('[DB] 本地保存失败:', e); }
-        await CloudDB.pushKey(key, value);
+        try { localStorage.setItem(key, JSON.stringify(value)); } catch(e) {}
+        const ok = await CloudDB.push(key, value);
+        console.log('[DB.set] key:', key, ok ? '✅ 写入成功' : '❌ 写入失败');
     },
 
     setLocal(key, value) {
@@ -2481,14 +2484,100 @@ const DB = {
     genInviteCode() {
         const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
         let code = '';
-        for (let i = 0; i < 6; i++) {
-            code += chars[Math.floor(Math.random() * chars.length)];
-        }
+        for (let i = 0; i < 6; i++) code += chars[Math.floor(Math.random() * chars.length)];
         return code;
     },
 
     async sync() {
         await CloudDB.pull();
+    }
+};
+
+// ===== 云端诊断工具（页面上直接可用）=====
+window.testCloudDB = async function() {
+    console.clear();
+    console.log('========== CloudDB 诊断开始 ==========');
+    console.log('JSONBIN_URL:', JSONBIN_URL);
+    
+    // 测试拉取
+    console.log('\n[1/3] 测试拉取...');
+    try {
+        const resp = await fetch(JSONBIN_URL + '/latest', {
+            headers: { 'X-Master-Key': JSONBIN_API_KEY }
+        });
+        console.log('拉取状态:', resp.status);
+        const json = await resp.json();
+        console.log('数据 keys:', Object.keys(json.record || {}));
+        const users = json.record?.lovenest_users || [];
+        console.log('JSONBin 用户数:', users.length);
+        users.forEach(u => console.log('  -', u.nickname, '/', u.phone));
+    } catch (e) {
+        console.error('拉取失败:', e.message);
+    }
+    
+    // 测试写入
+    console.log('\n[2/3] 测试写入...');
+    try {
+        const testUser = {
+            id: 'diag_' + Date.now(),
+            nickname: '诊断测试',
+            phone: '00000000000',
+            password: 'test',
+            gender: 'male',
+            avatar: '🙋‍♂️',
+            inviteCode: 'DIAG01',
+            partnerId: null,
+            coupleId: null,
+            loveScore: 0,
+            createdAt: new Date().toISOString(),
+            status: 'active'
+        };
+        const pullResp = await fetch(JSONBIN_URL + '/latest', {
+            headers: { 'X-Master-Key': JSONBIN_API_KEY }
+        });
+        const pullJson = await pullResp.json();
+        const data = pullJson.record || {};
+        const users = data.lovenest_users || [];
+        users.push(testUser);
+        data.lovenest_users = users;
+        const pushResp = await fetch(JSONBIN_URL, {
+            method: 'PUT',
+            headers: {
+                'X-Master-Key': JSONBIN_API_KEY,
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(data)
+        });
+        console.log('写入状态:', pushResp.status);
+        console.log('写入成功!');
+    } catch (e) {
+        console.error('写入失败:', e.message);
+    }
+    
+    // 验证
+    console.log('\n[3/3] 验证...');
+    try {
+        const resp = await fetch(JSONBIN_URL + '/latest', {
+            headers: { 'X-Master-Key': JSONBIN_API_KEY }
+        });
+        const json = await resp.json();
+        console.log('JSONBin 最终用户数:', json.record.lovenest_users.length);
+        // 清理诊断数据
+        const clean = json.record;
+        clean.lovenest_users = clean.lovenest_users.filter(u => u.id && !u.id.startsWith('diag_'));
+        await fetch(JSONBIN_URL, {
+            method: 'PUT',
+            headers: {
+                'X-Master-Key': JSONBIN_API_KEY,
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(clean)
+        });
+        console.log('诊断数据已清理');
+        console.log('\n========== 诊断完成 ==========');
+        console.log('如果上方显示"写入成功"但最终用户数不对，请截图发给我！');
+    } catch (e) {
+        console.error('验证失败:', e.message);
     }
 };
 
